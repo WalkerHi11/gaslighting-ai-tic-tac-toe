@@ -270,6 +270,7 @@
     }
 
     .board-card, .side-card {
+      min-width: 0;
       border: var(--outline);
       border-radius: 22px;
       background: rgba(255,252,235,0.97);
@@ -326,6 +327,70 @@
       font-weight: 1000;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .cheat-story {
+      display: grid;
+      min-height: 62px;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      margin: 0 2px 12px;
+      padding: 8px 10px;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      color: #5e5670;
+      background: #f5efff;
+      box-shadow: 3px 3px 0 rgba(20,19,34,.25);
+      transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .cheat-story.active {
+      color: var(--ink);
+      background: #fff8bd;
+      transform: translateY(-1px);
+    }
+
+    .story-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      gap: 4px;
+    }
+
+    .story-step {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      color: #766d88;
+      background: white;
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: 10px;
+      transition: transform 180ms cubic-bezier(.2,.8,.2,1.25), background 180ms ease;
+    }
+
+    .story-step.done { color: var(--ink); background: var(--green); }
+    .story-step.active { color: var(--ink); background: var(--yellow); transform: scale(1.18) rotate(-7deg); }
+
+    .story-copy { min-width: 0; }
+
+    .story-label {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--purple);
+      font-size: 7px;
+      font-weight: 1000;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .story-text {
+      margin: 0;
+      font-size: clamp(10px, 2.2vw, 13px);
+      font-weight: 1000;
+      line-height: 1.2;
     }
 
     .board-wrap {
@@ -396,6 +461,32 @@
     }
 
     .square.interactive { cursor: pointer; }
+
+    .square.recent-change {
+      z-index: 18;
+      box-shadow: inset 0 0 0 clamp(4px, .7vw, 7px) #36ddff, inset 0 0 24px rgba(54,221,255,.85), 0 0 22px rgba(54,221,255,.95);
+      animation: changedSquarePulse 620ms ease-in-out 2 alternate;
+    }
+
+    .change-marker {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      z-index: 22;
+      padding: 2px 4px;
+      border: 2px solid var(--ink);
+      border-radius: 5px;
+      color: var(--ink);
+      background: #36ddff;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-size: clamp(5px, 1vw, 8px);
+      font-weight: 1000;
+      letter-spacing: .04em;
+      line-height: 1;
+      pointer-events: none;
+      transform: translateX(-50%) rotate(-3deg);
+      white-space: nowrap;
+    }
 
     .square.interactive:hover {
       z-index: 4;
@@ -571,6 +662,7 @@
 
     .side-stack {
       display: grid;
+      min-width: 0;
       gap: 13px;
     }
 
@@ -1137,6 +1229,7 @@
     @keyframes impactFlash { 0% { opacity: 0; } 22% { opacity: .9; } 100% { opacity: 0; } }
     @keyframes comboSlam { 0% { opacity: 0; transform: scale(3.4) rotate(-20deg); } 45% { opacity: 1; transform: scale(.86) rotate(5deg); } 72% { transform: scale(1.06) rotate(-2deg); } 100% { opacity: 0; transform: scale(.95) rotate(0); } }
     @keyframes screenFlash { 0% { opacity: 0; } 20% { opacity: .75; } 100% { opacity: 0; } }
+    @keyframes changedSquarePulse { to { filter: brightness(1.25) saturate(1.35); transform: scale(.96); } }
     @keyframes donutWiggle { to { transform: rotate(11deg) scale(1.08); } }
     @keyframes reportWobble { 25% { transform: translate(-6px,3px) rotate(-3deg); } 75% { transform: translate(6px,-3px) rotate(3deg); } }
     @keyframes floatingScore { 0% { opacity: 0; transform: translateY(25px) scale(0.6) rotate(-8deg); } 30% { opacity: 1; transform: translateY(0) scale(1.1) rotate(2deg); } 100% { opacity: 0; transform: translateY(-70px) scale(1.25); } }
@@ -1148,7 +1241,7 @@
     @keyframes bribeIn { 0% { opacity: 0; transform: scale(0.45) rotate(-12deg); } 75% { opacity: 1; transform: scale(1.04) rotate(2deg); } }
 
     @media (max-width: 850px) {
-      .game-grid { grid-template-columns: 1fr; }
+      .game-grid { grid-template-columns: minmax(0, 1fr); }
       .side-stack { grid-template-columns: 1fr 1fr; }
       .side-card:first-child { grid-row: span 2; }
     }
@@ -1162,7 +1255,7 @@
       .score-card { padding: 9px 10px; }
       .score-sub { display: none; }
       .game-grid { gap: 12px; }
-      .side-stack { grid-template-columns: 1fr; }
+      .side-stack { grid-template-columns: minmax(0, 1fr); }
       .side-card:first-child { grid-row: auto; }
       .board-card { border-radius: 17px; box-shadow: 4px 4px 0 var(--ink); }
       .board { border-width: 4px; border-radius: 10px; }
@@ -1170,6 +1263,9 @@
       .bribe-buttons { grid-template-columns: 1fr; }
       .cheat-banner { border-width: 3px; box-shadow: 5px 5px 0 var(--ink); }
       .drag-ghost { width: 54px; height: 54px; }
+      .cheat-story { min-height: 68px; grid-template-columns: 1fr; gap: 5px; }
+      .story-steps { grid-template-columns: repeat(3, 19px); }
+      .story-step { width: 19px; height: 19px; font-size: 8px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1265,6 +1361,18 @@
             <span id="statusText" aria-live="polite">Your turn! Red pieces move upward.</span>
           </div>
           <span id="turnNumber" class="turn-number">Turn 01 · Cheat 00</span>
+        </div>
+
+        <div id="cheatStory" class="cheat-story" aria-live="polite" aria-atomic="true">
+          <div class="story-steps" aria-hidden="true">
+            <span class="story-step">1</span>
+            <span class="story-step">2</span>
+            <span class="story-step">3</span>
+          </div>
+          <div class="story-copy">
+            <span id="storyLabel" class="story-label">Cheat replay</span>
+            <p id="storyText" class="story-text">Waiting for suspicious activity…</p>
+          </div>
         </div>
 
         <div id="boardWrap" class="board-wrap">
@@ -1396,6 +1504,34 @@
         shrinkRay: "PEW!", timeOut: "SIT!", lavaFloor: "HOT!", exchange: "SWAP!",
         doubleTrouble: "AGAIN!", moonGravity: "FLOAT!", replayReview: "NOPE!", boardTilt: "TILT!"
       };
+      const CHEAT_PACE = { warning: 1300, result: 1750 };
+      const CHEAT_GUIDES = {
+        taxMan: { warning: "The AI picked one of your red checkers for a fake rent inspection.", result: "One red checker was removed from the board." },
+        bribe: { warning: "A fake-money offer is coming. Both answers let the AI steal pieces.", result: "Three of your red checkers were removed anyway." },
+        magnets: { warning: "No checker moves yet. The AI is magnetizing your next move.", result: "Your next checker will snap to a different square after you move it." },
+        kingInflation: { warning: "Watch the black checkers. One is about to receive a ridiculous promotion.", result: "One black checker became an oversized king." },
+        pocketSand: { warning: "Keep your eyes on the black pieces before the sand covers the board.", result: "Two black checkers secretly advanced one row." },
+        wind: { warning: "Watch the whole board. A gust is about to slide several pieces sideways.", result: "Up to three checkers drifted left or right." },
+        unoReverse: { warning: "No checker moves yet. The AI is changing who you control next turn.", result: "On your next turn, you must move one of the AI's black pieces." },
+        pitfall: { warning: "Watch the empty dark squares. One is about to become a trap.", result: "A visible hole appeared. A red checker landing there will disappear." },
+        distraction: { warning: "Remember how many red pieces you have before the giant emoji appears.", result: "While you were distracted, one red checker was stolen." },
+        outage: { warning: "The screen will go dark. The AI will edit the board while it is hidden.", result: "One red checker vanished and black pieces moved deeper into your side." },
+        infiniteJump: { warning: "Track the bouncing black checker. The fourth bounce steals a red piece.", result: "A black checker bounced seven times and one red checker disappeared." },
+        construction: { warning: "Watch two empty dark squares. The AI is closing them for roadwork.", result: "Two squares now contain cones and cannot be used." },
+        clone: { warning: "Count the black checkers. The AI is about to use a cloning coupon.", result: "One extra black checker was added to an empty square." },
+        donut: { warning: "Watch one of your red checkers. It is about to become a snack.", result: "One red checker was replaced by an immovable donut." },
+        teleport: { warning: "Watch for a black checker jumping directly into your territory.", result: "A black checker teleported near your back row and became a giant king." },
+        bully: { warning: "One red checker is about to get shoved clear off the board.", result: "One red checker was pushed away and removed." },
+        tinyHorse: { warning: "Watch a black checker. For one move it will copy a chess knight.", result: "One black checker moved in an L-shape, ignoring checkers rules." },
+        shrinkRay: { warning: "Watch one red checker. The AI is aiming a discount shrink ray.", result: "One red checker became tiny, but it can still move." },
+        timeOut: { warning: "Watch one red checker. It is being sent to an invisible time-out chair.", result: "One red checker is asleep and cannot move for your next turn." },
+        lavaFloor: { warning: "Watch three empty dark squares. They are about to heat up.", result: "Three lava hazards appeared. A red checker landing there will burn up." },
+        exchange: { warning: "Watch one red and one black checker. They are about to trade places.", result: "A red checker and a black checker swapped sides of the board." },
+        doubleTrouble: { warning: "No checker moves yet. The AI is giving itself an extra move.", result: "The AI will make two normal checkers moves this turn." },
+        moonGravity: { warning: "No checker moves yet. Your next red move is becoming floaty.", result: "After your next move lands, that checker will drift to another square." },
+        replayReview: { warning: "Remember the move you just made. The AI is reviewing the replay.", result: "Your entire previous move was undone and the old board position returned." },
+        boardTilt: { warning: "Watch the whole board. The table is about to lean downhill.", result: "Up to four checkers slid diagonally down one square." }
+      };
 
       const state = {
         board: Array(64).fill(null),
@@ -1441,6 +1577,10 @@
         statusText: document.getElementById("statusText"),
         turnDot: document.getElementById("turnDot"),
         turnNumber: document.getElementById("turnNumber"),
+        cheatStory: document.getElementById("cheatStory"),
+        storyLabel: document.getElementById("storyLabel"),
+        storyText: document.getElementById("storyText"),
+        storySteps: Array.from(document.querySelectorAll(".story-step")),
         playerScore: document.getElementById("playerScore"),
         aiScore: document.getElementById("aiScore"),
         redCount: document.getElementById("redCount"),
@@ -1575,6 +1715,100 @@
         dom.botMood.textContent = phase.kicker;
         const rumoredCheat = state.cheatDeck[0];
         dom.rumorText.textContent = rumoredCheat ? CHEAT_RUMORS[rumoredCheat] : "the deck being reshuffled";
+      }
+
+      function setStoryStep(step, label, text) {
+        dom.cheatStory.classList.toggle("active", step > 0);
+        dom.storyLabel.textContent = label;
+        dom.storyText.textContent = text;
+        dom.storySteps.forEach((marker, index) => {
+          const markerStep = index + 1;
+          marker.classList.toggle("done", markerStep < step);
+          marker.classList.toggle("active", markerStep === step);
+        });
+      }
+
+      function resetStory(message = "Waiting for suspicious activity…") {
+        setStoryStep(0, "Cheat replay", message);
+      }
+
+      function presentationSnapshot() {
+        return {
+          board: state.board.map((piece) => {
+            if (!piece) return "empty";
+            if (piece.type === "donut") return "donut";
+            return [piece.id, piece.color, piece.king, piece.giant, piece.tiny, piece.frozenTurns].join(":");
+          }),
+          pitIndex: state.pitIndex,
+          blocked: new Set(state.blocked),
+          lavaIndices: new Set(state.lavaIndices)
+        };
+      }
+
+      function changedIndices(before) {
+        const changed = [];
+        for (let index = 0; index < state.board.length; index += 1) {
+          const piece = state.board[index];
+          const signature = !piece
+            ? "empty"
+            : piece.type === "donut"
+              ? "donut"
+              : [piece.id, piece.color, piece.king, piece.giant, piece.tiny, piece.frozenTurns].join(":");
+          const pitChanged = (before.pitIndex === index) !== (state.pitIndex === index);
+          const blockedChanged = before.blocked.has(index) !== state.blocked.has(index);
+          const lavaChanged = before.lavaIndices.has(index) !== state.lavaIndices.has(index);
+          if (before.board[index] !== signature || pitChanged || blockedChanged || lavaChanged) changed.push(index);
+        }
+        return changed;
+      }
+
+      function clearChangeHighlights() {
+        dom.squares.forEach((square) => {
+          square.classList.remove("recent-change");
+          square.querySelector(".change-marker")?.remove();
+        });
+      }
+
+      function highlightChanges(indices) {
+        clearChangeHighlights();
+        [...new Set(indices)].forEach((index, order) => {
+          const square = dom.squares[index];
+          if (!square) return;
+          square.classList.add("recent-change");
+          if (order < 6) {
+            const marker = document.createElement("span");
+            marker.className = "change-marker";
+            marker.textContent = "CHANGED";
+            marker.setAttribute("aria-hidden", "true");
+            square.appendChild(marker);
+          }
+        });
+      }
+
+      function stageCheat(cheatId, done) {
+        const guide = CHEAT_GUIDES[cheatId];
+        const before = presentationSnapshot();
+        setStoryStep(1, `1 · ${CHEAT_NAMES[cheatId]} incoming`, guide.warning);
+        setStatus(`Cheat incoming: ${CHEAT_NAMES[cheatId]}. Read the warning, then watch the board.`, "ai");
+        setBotDialogue("I am announcing the cheating first. That makes it educational.");
+        shakeBoard("small");
+
+        schedule(() => {
+          if (state.phase === "over") return;
+          setStoryStep(2, "2 · Watch the board", "The cheat is happening now. Keep an eye on the pieces and hazards.");
+          runCheat(cheatId, () => {
+            if (state.phase === "over") return;
+            const changes = changedIndices(before);
+            highlightChanges(changes);
+            setStoryStep(3, "3 · What changed", guide.result);
+            setStatus(`Cheat complete: ${guide.result}`, "ai");
+            schedule(() => {
+              if (state.phase === "over") return;
+              clearChangeHighlights();
+              done();
+            }, CHEAT_PACE.result);
+          });
+        }, CHEAT_PACE.warning);
       }
 
       function awardAiScore(forcedAmount = null) {
@@ -1996,8 +2230,6 @@
       }
 
       function applyMoonGravity(from, piece) {
-        if (!state.moonGravityArmed || piece.color !== PLAYER) return from;
-        state.moonGravityArmed = false;
         const row = rowOf(from);
         const column = colOf(from);
         const targets = shuffle([[-1,-1],[-1,1],[1,-1],[1,1]])
@@ -2005,7 +2237,10 @@
           .filter(([nextRow, nextColumn]) => inBounds(nextRow, nextColumn))
           .map(([nextRow, nextColumn]) => toIndex(nextRow, nextColumn))
           .filter((index) => !state.board[index] && !state.blocked.has(index));
-        if (!targets.length) return from;
+        if (!targets.length) {
+          setStoryStep(3, "3 · Moon gravity fizzled", "The checker landed normally because every nearby square was full.");
+          return from;
+        }
         const destination = pick(targets);
         state.board[from] = null;
         state.board[destination] = piece;
@@ -2014,8 +2249,48 @@
         setBotDialogue("Gravity is lower today. I checked with the moon manager.");
         renderBoard(new Map([[destination, "ai-moving"]]));
         spawnMoveStreak(from, destination, PLAYER);
-        schedule(() => impactFeedback(destination, "medium", "FWEEE!", "#36ddff"), 80);
+        highlightChanges([from, destination]);
+        setStoryStep(3, "3 · Moon gravity result", "Your red checker landed, then floated to the highlighted square.");
+        setStatus("Moon gravity complete: your checker drifted after landing.", "ai");
+        schedule(() => impactFeedback(destination, "medium", "FWEEE!", "#36ddff"), 180);
         return destination;
+      }
+
+      function finishPlayerLanding(move, piece, landingIndex, gravityMoved) {
+        if (state.pitIndex === landingIndex || state.lavaIndices.has(landingIndex)) {
+          const landedOnLava = state.lavaIndices.has(landingIndex);
+          setStatus(landedOnLava ? "SIZZLE! Your checker discovered that the floor was, in fact, lava!" : "FWOOOOP! Your checker fell into the surprise hole!", "ai");
+          setBotDialogue(landedOnLava ? "The floor was clearly orange and bubbling. Skill issue." : "That hole had a tiny sign. You should have read the tiny sign.");
+          playBoing();
+          impactFeedback(landingIndex, "large", landedOnLava ? "SIZZLE!" : "FWOOOOP!", landedOnLava ? "#ff8a26" : "#7a34ef");
+          schedule(() => {
+            state.board[landingIndex] = null;
+            if (state.pitIndex === landingIndex) state.pitIndex = null;
+            state.lavaIndices.delete(landingIndex);
+            renderBoard();
+            highlightChanges([landingIndex]);
+            if (gravityMoved) setStoryStep(3, "3 · Gravity plus hazard", "The checker floated, hit a hazard, and disappeared from the highlighted square.");
+            schedule(endPlayerTurn, gravityMoved ? 950 : 350);
+          }, gravityMoved ? 1050 : 720);
+          return;
+        }
+
+        if (move.capture !== null && !gravityMoved) {
+          const moreCaptures = getMovesForPiece(landingIndex).captures;
+          if (moreCaptures.length) {
+            state.phase = "player";
+            state.chainFrom = landingIndex;
+            state.selected = landingIndex;
+            state.legalMoves = moreCaptures;
+            renderBoard();
+            setStatus("Multi-jump! Keep hopping with the same checker.");
+            return;
+          }
+        }
+
+        if (piece.king) setBotDialogue("Oh cool, you got a king. I have several illegal responses prepared.");
+        if (gravityMoved) schedule(endPlayerTurn, CHEAT_PACE.result);
+        else endPlayerTurn();
       }
 
       function executePlayerMove(move, wasDragged) {
@@ -2028,43 +2303,28 @@
         const movingPiece = state.board[move.from];
         const wasKing = movingPiece.king;
         const piece = applyMove(move);
+        const gravityPending = state.moonGravityArmed && piece.color === PLAYER;
+        if (gravityPending) {
+          state.moonGravityArmed = false;
+          state.phase = "animating";
+        }
         state.selected = null;
         state.legalMoves = [];
         renderBoard(new Map([[move.to, "ai-moving"]]));
         moveFeedback(move, piece, !wasKing && piece.king);
-        const landingIndex = applyMoonGravity(move.to, piece);
-        const gravityMoved = landingIndex !== move.to;
-
-        if (state.pitIndex === landingIndex || state.lavaIndices.has(landingIndex)) {
-          const landedOnLava = state.lavaIndices.has(landingIndex);
-          setStatus(landedOnLava ? "SIZZLE! Your checker discovered that the floor was, in fact, lava!" : "FWOOOOP! Your checker fell into the surprise hole!", "ai");
-          setBotDialogue(landedOnLava ? "The floor was clearly orange and bubbling. Skill issue." : "That hole had a tiny sign. You should have read the tiny sign.");
-          playBoing();
-          impactFeedback(landingIndex, "large", landedOnLava ? "SIZZLE!" : "FWOOOP!", landedOnLava ? "#ff8a26" : "#7a34ef");
-          schedule(() => {
-            state.board[landingIndex] = null;
-            if (state.pitIndex === landingIndex) state.pitIndex = null;
-            state.lavaIndices.delete(landingIndex);
-            renderBoard();
-            endPlayerTurn();
-          }, 720);
+        if (!gravityPending) {
+          finishPlayerLanding(move, piece, move.to, false);
           return;
         }
 
-        if (move.capture !== null && !gravityMoved) {
-          const moreCaptures = getMovesForPiece(landingIndex).captures;
-          if (moreCaptures.length) {
-            state.chainFrom = landingIndex;
-            state.selected = landingIndex;
-            state.legalMoves = moreCaptures;
-            renderBoard();
-            setStatus("Multi-jump! Keep hopping with the same checker.");
-            return;
-          }
-        }
-
-        if (piece.king) setBotDialogue("Oh cool, you got a king. I have several illegal responses prepared.");
-        endPlayerTurn();
+        highlightChanges([move.from, move.to]);
+        setStoryStep(2, "2 · First landing", "Your checker reached the square you chose. Now watch where moon gravity drifts it.");
+        setStatus("Moon gravity is pulling your checker again…", "ai");
+        schedule(() => {
+          clearChangeHighlights();
+          const landingIndex = applyMoonGravity(move.to, piece);
+          finishPlayerLanding(move, piece, landingIndex, landingIndex !== move.to);
+        }, 950);
       }
 
       function endPlayerTurn() {
@@ -2156,16 +2416,21 @@
         awardAiScore(999);
         renderBoard(new Map([[target, "ai-moving"]]));
         spawnMoveStreak(from, target, PLAYER);
-        schedule(() => impactFeedback(target, "large", "YOINK!", "#36ddff"), 80);
+        highlightChanges([from, target]);
+        setStoryStep(3, "3 · Magnet result", "Your red checker left its original square and snapped to the highlighted square instead.");
+        setStatus("Magnet complete: the highlighted checker landed somewhere you did not choose.", "ai");
+        schedule(() => impactFeedback(target, "large", "YOINK!", "#36ddff"), 180);
         if (state.pitIndex === target) {
           schedule(() => {
             state.board[target] = null;
             state.pitIndex = null;
             renderBoard();
-            endPlayerTurn();
-          }, 600);
+            highlightChanges([target]);
+            setStoryStep(3, "3 · Magnet plus pitfall", "The magnet moved your checker onto the hole, then the checker disappeared.");
+            schedule(endPlayerTurn, 900);
+          }, 1300);
         } else {
-          schedule(endPlayerTurn, 650);
+          schedule(endPlayerTurn, CHEAT_PACE.result);
         }
       }
 
@@ -2208,8 +2473,10 @@
         if (shouldCheat) {
           const cheatId = drawCheat();
           const afterCheat = () => state.comboPending ? runComboAftershock(performAiMove) : performAiMove();
-          runCheat(cheatId, afterCheat);
+          stageCheat(cheatId, afterCheat);
         } else {
+          setStoryStep(2, "Ordinary AI move", "No special cheat this turn. Watch one black checker make a normal move.");
+          setStatus("Chaos Bot is making one ordinary move. Probably.", "ai");
           performAiMove();
         }
       }
@@ -2229,74 +2496,88 @@
       function animateAndRemove(indices, animationClass, done) {
         const classes = new Map(indices.map((index) => [index, animationClass]));
         renderBoard(classes);
-        indices.forEach((index, order) => schedule(() => impactFeedback(index, "large", animationClass === "shoved" ? "YEET!" : "POOF!", "#ff6b8f"), order * 80));
+        indices.forEach((index, order) => schedule(() => impactFeedback(index, "large", animationClass === "shoved" ? "YEET!" : "POOF!", "#ff6b8f"), order * 220));
         safeContinue(() => {
           indices.forEach((index) => { state.board[index] = null; });
           renderBoard();
           done();
-        }, 760);
+        }, Math.max(980, indices.length * 220 + 520));
       }
 
       function runComboAftershock(done) {
         state.comboPending = false;
         state.comboCount += 1;
-        dom.comboStamp.textContent = pick(["DOUBLE\nNONSENSE!", "COMBO\nCHEAT!", "RULES x2!", "BONUS\nFELONY!"]);
-        dom.comboStamp.classList.remove("show");
-        void dom.comboStamp.offsetWidth;
-        dom.comboStamp.classList.add("show");
-        awardAiScore(999);
-        confettiBurst(34);
-        flashScreen();
-        shakeBoard("large");
-
-        const aftershock = pick(["crown", "clone", "freeze", "lava"]);
-        let message = "The previous cheat came with a free bonus cheat!";
-        if (aftershock === "crown") {
-          const targets = randomPieceIndices(AI);
-          if (targets.length) {
-            const target = pick(targets);
-            state.board[target].king = true;
-            state.board[target].giant = true;
-            renderBoard(new Map([[target, "ai-moving"]]));
-            impactFeedback(target, "large", "CROWN!", "#fff254");
-          }
-          message = "COMBO AFTERSHOCK: one complimentary enormous crown!";
-        } else if (aftershock === "clone") {
-          const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
-          if (targets.length) {
-            const target = pick(targets);
-            state.board[target] = makePiece(AI, { king: true });
-            renderBoard(new Map([[target, "ai-moving"]]));
-            impactFeedback(target, "large", "FREEBIE!", "#fff254");
-          }
-          message = "COMBO AFTERSHOCK: a free king fell out of the receipt!";
-        } else if (aftershock === "freeze") {
-          const targets = randomPieceIndices(PLAYER);
-          if (targets.length) {
-            const target = pick(targets);
-            state.board[target].frozenTurns = 1;
-            state.board[target].tiny = true;
-            renderBoard();
-            impactFeedback(target, "large", "TIME-OUT!", "#36ddff");
-          }
-          message = "COMBO AFTERSHOCK: somebody has to sit quietly and be tiny!";
-        } else {
-          const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
-          if (targets.length) {
-            const target = pick(targets);
-            state.lavaIndices.add(target);
-            renderBoard();
-            impactFeedback(target, "large", "HOT!", "#ff8a26");
-          }
-          message = "COMBO AFTERSHOCK: a bonus lava square, because flooring is hard!";
-        }
-
-        showCheatBanner("Double Nonsense Combo", message);
+        setStoryStep(1, "1 · Bonus cheat incoming", "Every fourth cheat includes a second surprise. Nothing changes until the countdown reaches step 2.");
+        setStatus("Combo warning: a bonus cheat is about to happen.", "ai");
+        showCheatBanner("Double Nonsense Warning", "BONUS CHEAT INCOMING! Watch the board after the warning.");
         setBotDialogue("Every fourth cheat earns me a free aftershock. It is in the loyalty program.");
-        safeContinue(() => {
+
+        schedule(() => {
+          if (state.phase === "over") return;
+          const before = presentationSnapshot();
+          setStoryStep(2, "2 · Watch the bonus", "The combo aftershock is changing one highlighted part of the board now.");
+          dom.comboStamp.textContent = pick(["DOUBLE\nNONSENSE!", "COMBO\nCHEAT!", "RULES x2!", "BONUS\nFELONY!"]);
           dom.comboStamp.classList.remove("show");
-          done();
-        }, 980);
+          void dom.comboStamp.offsetWidth;
+          dom.comboStamp.classList.add("show");
+          awardAiScore(999);
+          confettiBurst(34);
+          flashScreen();
+          shakeBoard("large");
+
+          const aftershock = pick(["crown", "clone", "freeze", "lava"]);
+          let message = "The previous cheat came with a free bonus cheat!";
+          if (aftershock === "crown") {
+            const targets = randomPieceIndices(AI);
+            if (targets.length) {
+              const target = pick(targets);
+              state.board[target].king = true;
+              state.board[target].giant = true;
+              renderBoard(new Map([[target, "ai-moving"]]));
+              impactFeedback(target, "large", "CROWN!", "#fff254");
+            }
+            message = "One black checker received a complimentary enormous crown.";
+          } else if (aftershock === "clone") {
+            const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
+            if (targets.length) {
+              const target = pick(targets);
+              state.board[target] = makePiece(AI, { king: true });
+              renderBoard(new Map([[target, "ai-moving"]]));
+              impactFeedback(target, "large", "FREEBIE!", "#fff254");
+            }
+            message = "A free black king fell out of the AI's receipt.";
+          } else if (aftershock === "freeze") {
+            const targets = randomPieceIndices(PLAYER);
+            if (targets.length) {
+              const target = pick(targets);
+              state.board[target].frozenTurns = 1;
+              state.board[target].tiny = true;
+              renderBoard();
+              impactFeedback(target, "large", "TIME-OUT!", "#36ddff");
+            }
+            message = "One red checker became tiny and has to sit out its next turn.";
+          } else {
+            const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
+            if (targets.length) {
+              const target = pick(targets);
+              state.lavaIndices.add(target);
+              renderBoard();
+              impactFeedback(target, "large", "HOT!", "#ff8a26");
+            }
+            message = "One bonus lava square appeared on the board.";
+          }
+
+          showCheatBanner("Double Nonsense Combo", message);
+          highlightChanges(changedIndices(before));
+          setStoryStep(3, "3 · Bonus change", message);
+          setStatus(`Combo complete: ${message}`, "ai");
+          schedule(() => {
+            if (state.phase === "over") return;
+            dom.comboStamp.classList.remove("show");
+            clearChangeHighlights();
+            done();
+          }, CHEAT_PACE.result);
+        }, 1050);
       }
 
       function runCheat(cheatId, done) {
@@ -2362,7 +2643,7 @@
             moved.forEach(({ from, to, piece }, order) => schedule(() => {
               spawnMoveStreak(from, to, piece.color);
               impactFeedback(to, "medium", "SCOOT!", "#fff254");
-            }, order * 90));
+            }, order * 220));
             done();
           }, 1100);
           return;
@@ -2389,7 +2670,7 @@
           moves.forEach(({ from, to, color }, order) => schedule(() => {
             spawnMoveStreak(from, to, color);
             impactFeedback(to, "medium", "WHOOSH!", "#36ddff");
-          }, order * 80));
+          }, order * 220));
           safeContinue(done, 850);
           return;
         }
@@ -2457,7 +2738,7 @@
           targets.forEach((index) => state.blocked.add(index));
           announceCheat(cheatId, "These squares are closed for road work until never.", "The construction crew is two cones wearing one hard hat.");
           renderBoard();
-          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "CLONK!", "#ff8a26"), order * 90));
+          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "CLONK!", "#ff8a26"), order * 220));
           safeContinue(done, 850);
           return;
         }
@@ -2556,7 +2837,7 @@
           targets.forEach((index) => state.lavaIndices.add(index));
           announceCheat(cheatId, "Three squares are now lava. My pieces brought oven mitts!", "Your pieces did not sign the lava waiver. I signed it for them.");
           renderBoard();
-          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "HOT!", "#ff8a26"), order * 100));
+          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "HOT!", "#ff8a26"), order * 220));
           safeContinue(done, 1000);
           return;
         }
@@ -2639,7 +2920,7 @@
             schedule(() => {
               spawnMoveStreak(from, to, color);
               impactFeedback(to, "medium", "SLIDE!", color === PLAYER ? "#ff6b8f" : "#fff254");
-            }, order * 90);
+            }, order * 220);
           });
           safeContinue(done, 1100);
           return;
@@ -2732,7 +3013,7 @@
           renderBoard(new Map([[current, "ai-moving"]]));
           spawnMoveStreak(previous, current, AI);
           impactFeedback(current, hops === 4 ? "large" : "small", hops === 4 ? "CRUNCH!" : "BOING!", "#fff254");
-          schedule(hop, 190);
+          schedule(hop, 360);
         }
 
         hop();
@@ -2801,18 +3082,23 @@
         const wasKing = movingPiece.king;
         const piece = applyMove(move);
         renderBoard(new Map([[move.to, "ai-moving"]]));
+        highlightChanges([move.from, move.to, move.capture].filter((index) => index !== null));
+        setStoryStep(2, move.capture !== null ? "AI move · Jump" : "AI move · One checker", move.capture !== null
+          ? "The black checker jumped to the highlighted landing square and removed the highlighted red checker."
+          : "One black checker moved from the highlighted start square to the highlighted landing square.");
+        setStatus(move.capture !== null ? "Chaos Bot made a jump. The changed squares are highlighted." : "Chaos Bot moved one checker. The changed squares are highlighted.", "ai");
         moveFeedback(move, piece, !wasKing && piece.king);
 
         if (move.capture !== null) {
           const captures = getMovesForPiece(move.to).captures;
           if (captures.length) {
-            safeContinue(() => performAiCaptureChain(move.to), 420);
+            safeContinue(() => performAiCaptureChain(move.to), 760);
             return;
           }
         }
 
         if (piece.king) piece.giant = piece.giant || Math.random() < 0.18;
-        safeContinue(finishAiTurn, 520);
+        safeContinue(finishAiTurn, 950);
       }
 
       function performAiCaptureChain(from) {
@@ -2824,8 +3110,11 @@
         const move = pick(captures);
         const piece = applyMove(move);
         renderBoard(new Map([[move.to, "ai-moving"]]));
+        highlightChanges([move.from, move.to, move.capture].filter((index) => index !== null));
+        setStoryStep(2, "AI move · Jump continues", "The same black checker made another jump. Start, landing, and captured square are highlighted.");
+        setStatus("Chaos Bot's jump chain continues…", "ai");
         moveFeedback(move, piece, false);
-        safeContinue(() => performAiCaptureChain(move.to), 390);
+        safeContinue(() => performAiCaptureChain(move.to), 720);
       }
 
       function finishAiTurn() {
@@ -2862,6 +3151,8 @@
         state.legalMoves = [];
         state.turn += 1;
         renderBoard();
+        clearChangeHighlights();
+        resetStory("Your turn. The board is stable for the moment.");
         if (state.reverseActive) {
           setStatus("UNO REVERSE TURN: you control the black pieces!", "player");
           setBotDialogue("Please move my checker somewhere excellent. No pressure. Lots of pressure.");
@@ -2897,6 +3188,8 @@
         state.playerScore = 0;
         awardAiScore(12345);
         renderBoard();
+        clearChangeHighlights();
+        setStoryStep(3, "Final ruling", "Chaos Bot declared itself the winner and added another completely reasonable pile of points.");
         setStatus("Game over. Chaos Bot has certified its own victory.", "over");
         dom.resultCopy.textContent = reason;
         dom.resultModal.classList.add("show");
@@ -2968,6 +3261,7 @@
         setupPieces();
         refillCheatDeck();
         renderBoard();
+        resetStory();
         setStatus("Your turn! Red pieces move upward.");
         setBotDialogue("Fresh board, fresh lies. Normal checkers rules. Pinky promise.");
         dom.squares[40].focus({ preventScroll: true });
@@ -3036,6 +3330,10 @@
             comboCount: state.comboCount,
             lastCheat: state.lastCheat,
             cheatHistory: [...state.cheatHistory],
+            storyLabel: dom.storyLabel.textContent,
+            storyText: dom.storyText.textContent,
+            activeStoryStep: dom.storySteps.findIndex((step) => step.classList.contains("active")) + 1,
+            highlightedChanges: dom.squares.filter((square) => square.classList.contains("recent-change")).map((square) => Number(square.dataset.index)),
             board: state.board.map((piece) => {
               if (!piece) return null;
               if (piece.type === "donut") return "donut";
@@ -3057,6 +3355,28 @@
               state.phase = "player";
               renderBoard();
             });
+          },
+          triggerStagedCheat: (cheatId) => {
+            if (!CHEAT_NAMES[cheatId]) throw new Error(`Unknown cheat: ${cheatId}`);
+            resetGame();
+            state.phase = "ai";
+            if (cheatId === "replayReview") {
+              state.lastPlayerSnapshot = capturePlayerSnapshot();
+              applyMove({ from: 40, to: 33, capture: null });
+            }
+            state.cheatDeck = [cheatId];
+            renderBoard();
+            stageCheat(drawCheat(), () => {
+              if (state.phase === "over") return;
+              state.phase = "player";
+              renderBoard();
+            });
+          },
+          triggerAiMove: () => {
+            resetGame();
+            state.phase = "ai";
+            renderBoard();
+            performAiMove();
           },
           triggerCombo: () => {
             resetGame();
