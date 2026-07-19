@@ -333,7 +333,13 @@
       width: min(100%, 650px);
       margin: 0 auto;
       isolation: isolate;
+      transform-origin: 50% 50%;
     }
+
+    .board-wrap.shake-small { animation: boardShakeSmall 240ms cubic-bezier(.2,.8,.2,1); }
+    .board-wrap.shake-medium { animation: boardShakeMedium 380ms cubic-bezier(.2,.8,.2,1); }
+    .board-wrap.shake-large { animation: boardShakeLarge 560ms cubic-bezier(.18,.82,.2,1); }
+    .board-wrap.tilting { animation: boardTilt 900ms cubic-bezier(.2,.82,.2,1); }
 
     .board {
       position: relative;
@@ -374,6 +380,19 @@
       background-image: radial-gradient(white 1px, transparent 1px);
       background-size: 8px 8px;
       pointer-events: none;
+    }
+
+    .square.lava {
+      background: radial-gradient(circle at 50% 70%, #fff76a 0 8%, #ff8a26 22%, #e42345 52%, #4a143c 100%);
+      animation: lavaSquarePulse 520ms ease-in-out infinite alternate;
+    }
+
+    .lava-pool {
+      position: absolute;
+      z-index: 4;
+      font-size: clamp(19px, 4.2vw, 43px);
+      filter: drop-shadow(0 4px 0 rgba(20,19,34,0.7));
+      animation: lavaBubble 420ms ease-in-out infinite alternate;
     }
 
     .square.interactive { cursor: pointer; }
@@ -485,6 +504,24 @@
     .checker.taxed { animation: taxVacuum 620ms cubic-bezier(.65,-0.15,.9,.42) forwards; }
     .checker.stolen { animation: stolenSpin 600ms cubic-bezier(.7,-0.15,.9,.42) forwards; }
     .checker.shoved { animation: schoolyardShove 720ms cubic-bezier(.72,-0.2,.95,.4) forwards; }
+    .checker.tiny {
+      width: 42%;
+      border-width: 2px;
+      box-shadow: inset 0 -3px 0 rgba(20,19,34,0.22), 2px 2px 0 var(--ink);
+      animation: tinyPanic 330ms ease-in-out infinite alternate;
+    }
+
+    .checker.frozen::after {
+      position: absolute;
+      top: -42%;
+      right: -48%;
+      content: "💤";
+      font-size: clamp(14px, 3.1vw, 29px);
+      filter: drop-shadow(2px 2px 0 white);
+      animation: sleepyBob 700ms ease-in-out infinite alternate;
+    }
+
+    .checker.traitor-flip { animation: traitorFlip 760ms cubic-bezier(.16,.82,.22,1.25); }
 
     .donut-piece {
       position: relative;
@@ -656,6 +693,57 @@
       font-size: 21px;
     }
 
+    .depth-strip {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .depth-stat {
+      min-width: 0;
+      padding: 8px;
+      border: 2px solid var(--ink);
+      border-radius: 11px;
+      background: #fff7b6;
+      text-align: center;
+    }
+
+    .depth-stat span {
+      display: block;
+      color: #6b617b;
+      font-size: 7px;
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .depth-stat strong {
+      display: block;
+      overflow: hidden;
+      margin-top: 2px;
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: 16px;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .rumor-card {
+      margin-top: 8px;
+      padding: 7px 9px;
+      border: 2px dashed var(--purple);
+      border-radius: 10px;
+      color: var(--purple);
+      background: #f0e8ff;
+      font-size: 8px;
+      font-weight: 1000;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+
     .actions {
       display: grid;
       gap: 9px;
@@ -761,6 +849,116 @@
       border-radius: 14px;
       pointer-events: none;
     }
+
+    .burst-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .fx-particle {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      height: var(--size);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius, 50%);
+      background: var(--color);
+      box-shadow: 2px 2px 0 rgba(20,19,34,0.65);
+      transform: translate(-50%, -50%);
+      animation: particlePop var(--duration) cubic-bezier(.15,.78,.25,1) forwards;
+    }
+
+    .fx-ring {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 8%;
+      aspect-ratio: 1;
+      border: clamp(3px, .65vw, 7px) solid var(--color);
+      border-radius: 50%;
+      opacity: 0.95;
+      box-shadow: 0 0 0 3px var(--ink);
+      transform: translate(-50%, -50%) scale(0.15);
+      animation: ringBlast 520ms cubic-bezier(.12,.82,.2,1) forwards;
+    }
+
+    .move-streak {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--length);
+      height: clamp(5px, 1.1vw, 11px);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(90deg, transparent, var(--color));
+      transform: translateY(-50%) rotate(var(--angle)) scaleX(0.15);
+      transform-origin: left center;
+      animation: streakSwipe 360ms cubic-bezier(.16,.84,.2,1) forwards;
+    }
+
+    .comic-pop {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      z-index: 20;
+      color: var(--color);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: clamp(21px, 6vw, 58px);
+      letter-spacing: 0.02em;
+      line-height: 0.85;
+      pointer-events: none;
+      text-shadow: 4px 4px 0 var(--ink), -2px -2px 0 white;
+      transform: translate(-50%, -50%) scale(0.2) rotate(var(--rotate));
+      animation: comicPop 760ms cubic-bezier(.12,.8,.2,1.25) forwards;
+      white-space: nowrap;
+    }
+
+    .impact-flash {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      opacity: 0;
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,.92), rgba(255,242,84,.5) 18%, transparent 48%);
+      mix-blend-mode: screen;
+    }
+
+    .impact-flash.show { animation: impactFlash 210ms ease-out forwards; }
+
+    .combo-stamp {
+      position: absolute;
+      z-index: 25;
+      display: none;
+      padding: 10px 16px;
+      border: 5px solid var(--ink);
+      border-radius: 13px;
+      color: white;
+      background: var(--pink);
+      box-shadow: 7px 8px 0 var(--ink);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: clamp(26px, 7vw, 62px);
+      line-height: 0.9;
+      text-align: center;
+      text-transform: uppercase;
+      white-space: pre-line;
+    }
+
+    .combo-stamp.show { display: block; animation: comboSlam 900ms cubic-bezier(.14,.84,.18,1.2) forwards; }
+
+    .screen-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 205;
+      opacity: 0;
+      background: white;
+      pointer-events: none;
+    }
+
+    .screen-flash.show { animation: screenFlash 180ms ease-out forwards; }
 
     .fx-emoji {
       display: none;
@@ -923,6 +1121,22 @@
       30% { transform: translateX(5px) rotate(4deg); }
       100% { opacity: 0; transform: translateX(190px) translateY(-35px) rotate(620deg) scale(0.18); }
     }
+    @keyframes boardShakeSmall { 25% { transform: translate(-3px,2px) rotate(-.25deg); } 58% { transform: translate(3px,-2px) rotate(.25deg); } }
+    @keyframes boardShakeMedium { 18% { transform: translate(-6px,3px) rotate(-.55deg); } 42% { transform: translate(6px,-4px) rotate(.65deg); } 68% { transform: translate(-4px,-2px) rotate(-.35deg); } 86% { transform: translate(3px,2px); } }
+    @keyframes boardShakeLarge { 12% { transform: translate(-10px,6px) rotate(-1.1deg) scale(.995); } 28% { transform: translate(9px,-7px) rotate(1deg); } 47% { transform: translate(-8px,-3px) rotate(-.8deg); } 65% { transform: translate(6px,5px) rotate(.55deg); } 82% { transform: translate(-3px,2px); } }
+    @keyframes boardTilt { 0%,100% { transform: rotate(0); } 30% { transform: translateY(5px) rotate(-4deg) scale(.985); } 62% { transform: translateY(-2px) rotate(2.2deg) scale(1.01); } }
+    @keyframes lavaSquarePulse { to { filter: brightness(1.22) saturate(1.25); box-shadow: inset 0 0 18px #fff04f; } }
+    @keyframes lavaBubble { to { transform: translateY(-5px) rotate(5deg) scale(1.12); } }
+    @keyframes tinyPanic { to { transform: translate(-2px,1px) rotate(-9deg) scale(.9); } }
+    @keyframes sleepyBob { to { transform: translate(3px,-5px) scale(1.08); } }
+    @keyframes traitorFlip { 0% { transform: rotateY(0) scale(1); } 48% { transform: rotateY(90deg) scale(.55); } 100% { transform: rotateY(360deg) scale(1.06); } }
+    @keyframes particlePop { 0% { opacity: 1; transform: translate(-50%,-50%) scale(.25) rotate(0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--spin)); } }
+    @keyframes ringBlast { 55% { opacity: .85; } 100% { opacity: 0; transform: translate(-50%,-50%) scale(5.2); } }
+    @keyframes streakSwipe { 0% { opacity: 0; transform: translateY(-50%) rotate(var(--angle)) scaleX(.1); } 28% { opacity: .9; } 100% { opacity: 0; transform: translateY(-50%) rotate(var(--angle)) scaleX(1); } }
+    @keyframes comicPop { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.2) rotate(var(--rotate)); } 28% { opacity: 1; transform: translate(-50%,-58%) scale(1.2) rotate(calc(var(--rotate) * -0.3)); } 72% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%,-115%) scale(.88) rotate(var(--rotate)); } }
+    @keyframes impactFlash { 0% { opacity: 0; } 22% { opacity: .9; } 100% { opacity: 0; } }
+    @keyframes comboSlam { 0% { opacity: 0; transform: scale(3.4) rotate(-20deg); } 45% { opacity: 1; transform: scale(.86) rotate(5deg); } 72% { transform: scale(1.06) rotate(-2deg); } 100% { opacity: 0; transform: scale(.95) rotate(0); } }
+    @keyframes screenFlash { 0% { opacity: 0; } 20% { opacity: .75; } 100% { opacity: 0; } }
     @keyframes donutWiggle { to { transform: rotate(11deg) scale(1.08); } }
     @keyframes reportWobble { 25% { transform: translate(-6px,3px) rotate(-3deg); } 75% { transform: translate(6px,-3px) rotate(3deg); } }
     @keyframes floatingScore { 0% { opacity: 0; transform: translateY(25px) scale(0.6) rotate(-8deg); } 30% { opacity: 1; transform: translateY(0) scale(1.1) rotate(2deg); } 100% { opacity: 0; transform: translateY(-70px) scale(1.25); } }
@@ -976,6 +1190,7 @@
   </div>
 
   <div id="scoreFloat" class="score-float" aria-hidden="true">+420</div>
+  <div id="screenFlash" class="screen-flash" aria-hidden="true"></div>
 
   <div id="outage" class="outage" role="status" aria-live="assertive">
     <div class="outage-copy">
@@ -1055,6 +1270,9 @@
         <div id="boardWrap" class="board-wrap">
           <div id="board" class="board" role="grid" aria-label="Eight by eight checkers board" aria-busy="false"></div>
           <div class="fx-layer" aria-hidden="true">
+            <div id="burstLayer" class="burst-layer"></div>
+            <div id="impactFlash" class="impact-flash"></div>
+            <div id="comboStamp" class="combo-stamp">Double<br>Nonsense!</div>
             <div id="fxEmoji" class="fx-emoji">😹</div>
             <div id="reverseCard" class="reverse-card">↩</div>
             <div id="sandCloud" class="sand-cloud"></div>
@@ -1070,9 +1288,9 @@
       <aside class="side-stack" aria-label="Game information and controls">
         <section class="side-card">
           <div class="bot-header">
-            <div class="bot-face" aria-hidden="true">🤪</div>
+            <div id="botFace" class="bot-face" aria-hidden="true">🤪</div>
             <div>
-              <span class="panel-kicker">Live from the rule bunker</span>
+              <span id="botMood" class="panel-kicker">Live from the rule bunker</span>
               <h2 class="panel-title">Chaos Bot says</h2>
             </div>
           </div>
@@ -1092,6 +1310,11 @@
             <div class="piece-count">Your pieces<strong id="redCount">12</strong></div>
             <div class="piece-count">AI pieces<strong id="blackCount">12</strong></div>
           </div>
+          <div class="depth-strip">
+            <div class="depth-stat"><span>Survival stamps</span><strong id="survivalStamps">0 ⭐</strong></div>
+            <div class="depth-stat"><span>Chaos phase</span><strong id="chaosPhase">Warm-up</strong></div>
+          </div>
+          <div class="rumor-card">Next prank rumor: <span id="rumorText">something suspicious</span></div>
         </section>
 
         <section class="side-card actions">
@@ -1142,10 +1365,37 @@
         { id: "donut", name: "Donut Transformation" },
         { id: "teleport", name: "Teleportation License" },
         { id: "bully", name: "The Schoolyard Shove" },
-        { id: "tinyHorse", name: "The Tiny Horse Rule" }
+        { id: "tinyHorse", name: "The Tiny Horse Rule" },
+        { id: "shrinkRay", name: "The Discount Shrink Ray" },
+        { id: "timeOut", name: "The Time-Out Chair" },
+        { id: "lavaFloor", name: "The Floor Is Extremely Lava" },
+        { id: "exchange", name: "The Student Exchange Program" },
+        { id: "doubleTrouble", name: "Double-Move Tuesday" },
+        { id: "moonGravity", name: "Moon Gravity Mode" },
+        { id: "replayReview", name: "Suspicious Instant Replay" },
+        { id: "boardTilt", name: "Somebody Tilted the Table" }
       ];
 
       const CHEAT_NAMES = Object.fromEntries(CHEATS.map((cheat) => [cheat.id, cheat.name]));
+      const CHEAT_RUMORS = {
+        taxMan: "a tiny eviction notice", bribe: "fake money noises", magnets: "strong fridge energy",
+        kingInflation: "an unreasonable crown", pocketSand: "gritty weather", wind: "indoor wind",
+        unoReverse: "a card from another game", pitfall: "poor workplace safety", distraction: "loud emoji dancing",
+        outage: "a suspicious loading screen", infiniteJump: "many boings", construction: "cones without permits",
+        clone: "coupon-based science", donut: "snack-shaped tragedy", teleport: "gas-station physics",
+        bully: "playground traffic", tinyHorse: "quiet neighing", shrinkRay: "budget laser sounds",
+        timeOut: "a very tiny chair", lavaFloor: "warm floorboards", exchange: "unauthorized paperwork",
+        doubleTrouble: "calendar fraud", moonGravity: "floaty checker business", replayReview: "a referee with crayons",
+        boardTilt: "furniture moving"
+      };
+      const CHEAT_WORDS = {
+        taxMan: "EVICTED!", bribe: "DEAL?!", magnets: "YOINK!", kingInflation: "ROYAL!",
+        pocketSand: "PFFT!", wind: "WHOOSH!", unoReverse: "REVERSE!", pitfall: "FWOOOP!",
+        distraction: "LOOK!", outage: "UH-OH!", infiniteJump: "BOING!", construction: "ROADWORK!",
+        clone: "BONUS!", donut: "DONUT!", teleport: "ZAP!", bully: "SHOVE!", tinyHorse: "NEIGH!",
+        shrinkRay: "PEW!", timeOut: "SIT!", lavaFloor: "HOT!", exchange: "SWAP!",
+        doubleTrouble: "AGAIN!", moonGravity: "FLOAT!", replayReview: "NOPE!", boardTilt: "TILT!"
+      };
 
       const state = {
         board: Array(64).fill(null),
@@ -1155,9 +1405,13 @@
         legalMoves: [],
         pitIndex: null,
         blocked: new Set(),
+        lavaIndices: new Set(),
         magnetArmed: false,
+        moonGravityArmed: false,
         reverseNext: false,
         reverseActive: false,
+        aiBonusMoves: 0,
+        lastPlayerSnapshot: null,
         playerScore: 0,
         aiScore: 420,
         turn: 1,
@@ -1166,6 +1420,9 @@
         cheatDeck: [],
         cheatHistory: [],
         lastCheat: null,
+        comboPending: false,
+        comboCount: 0,
+        survivalStamps: 0,
         soundEnabled: true,
         reportCount: 0
       };
@@ -1176,6 +1433,7 @@
       let bribeContinuation = null;
       let dragState = null;
       let suppressClick = false;
+      let bannerToken = 0;
 
       const dom = {
         board: document.getElementById("board"),
@@ -1190,11 +1448,20 @@
         botDialogue: document.getElementById("botDialogue"),
         chaosFill: document.getElementById("chaosFill"),
         chaosLabel: document.getElementById("chaosLabel"),
+        survivalStamps: document.getElementById("survivalStamps"),
+        chaosPhase: document.getElementById("chaosPhase"),
+        rumorText: document.getElementById("rumorText"),
+        botFace: document.getElementById("botFace"),
+        botMood: document.getElementById("botMood"),
         specialRule: document.getElementById("specialRule"),
         cheatBanner: document.getElementById("cheatBanner"),
         cheatNumber: document.getElementById("cheatNumber"),
         cheatText: document.getElementById("cheatText"),
         scoreFloat: document.getElementById("scoreFloat"),
+        screenFlash: document.getElementById("screenFlash"),
+        burstLayer: document.getElementById("burstLayer"),
+        impactFlash: document.getElementById("impactFlash"),
+        comboStamp: document.getElementById("comboStamp"),
         fxEmoji: document.getElementById("fxEmoji"),
         reverseCard: document.getElementById("reverseCard"),
         sandCloud: document.getElementById("sandCloud"),
@@ -1252,8 +1519,17 @@
           id: nextPieceId++,
           color,
           king: Boolean(options.king),
-          giant: Boolean(options.giant)
+          giant: Boolean(options.giant),
+          tiny: Boolean(options.tiny),
+          frozenTurns: Number(options.frozenTurns || 0)
         };
+      }
+
+      function chaosPhaseInfo() {
+        if (state.cheatCount < 4) return { name: "Warm-up", mood: "Mildly suspicious", face: "🤪", kicker: "Live from the rule bunker", chance: 0.74 };
+        if (state.cheatCount < 9) return { name: "Fishy", mood: "Extremely fishy", face: "😈", kicker: "Now entering nonsense weather", chance: 0.86 };
+        if (state.cheatCount < 15) return { name: "Unhinged", mood: "Pants on fire", face: "🤡", kicker: "Rules are merely rumors", chance: 0.94 };
+        return { name: "Final form", mood: "Maximum nonsense", face: "👹", kicker: "Absolutely no adult supervision", chance: 1 };
       }
 
       function setStatus(text, mood = "player") {
@@ -1266,12 +1542,15 @@
       }
 
       function showCheatBanner(name, message) {
+        const token = ++bannerToken;
         dom.cheatNumber.textContent = `Cheat ${String(state.cheatCount).padStart(2, "0")} // ${name}`;
         dom.cheatText.textContent = message;
         dom.cheatBanner.classList.remove("show");
         void dom.cheatBanner.offsetWidth;
         dom.cheatBanner.classList.add("show");
-        schedule(() => dom.cheatBanner.classList.remove("show"), 3200);
+        schedule(() => {
+          if (token === bannerToken) dom.cheatBanner.classList.remove("show");
+        }, 3200);
       }
 
       function updateHud() {
@@ -1286,9 +1565,16 @@
         dom.aiScore.textContent = String(state.aiScore);
         dom.aiScore.setAttribute("aria-label", `Chaos Bot score ${state.aiScore}`);
 
-        const chaos = Math.min(100, 8 + state.cheatCount * 6);
+        const chaos = Math.min(100, 8 + state.cheatCount * 5);
+        const phase = chaosPhaseInfo();
         dom.chaosFill.style.width = `${chaos}%`;
-        dom.chaosLabel.textContent = chaos < 30 ? "Mildly suspicious" : chaos < 65 ? "Extremely fishy" : chaos < 100 ? "Pants on fire" : "Maximum nonsense";
+        dom.chaosLabel.textContent = phase.mood;
+        dom.chaosPhase.textContent = phase.name;
+        dom.survivalStamps.textContent = `${state.survivalStamps} ⭐`;
+        dom.botFace.textContent = phase.face;
+        dom.botMood.textContent = phase.kicker;
+        const rumoredCheat = state.cheatDeck[0];
+        dom.rumorText.textContent = rumoredCheat ? CHEAT_RUMORS[rumoredCheat] : "the deck being reshuffled";
       }
 
       function awardAiScore(forcedAmount = null) {
@@ -1303,6 +1589,7 @@
         void dom.scoreFloat.offsetWidth;
         dom.scoreFloat.classList.add("show");
         dom.aiScore.setAttribute("aria-label", `Chaos Bot score ${state.aiScore}`);
+        confettiBurst(7);
       }
 
       function ensureAudio() {
@@ -1343,6 +1630,160 @@
         tone(360, 150, 0.34, "square", 0.04, 0.35);
       }
 
+      function playMoveSound(color = PLAYER) {
+        const base = color === PLAYER ? 390 : 265;
+        tone(base, base * 1.34, 0.11, "triangle", 0.045);
+        tone(base * 0.62, base * 0.48, 0.13, "sine", 0.035, 0.035);
+      }
+
+      function playCaptureSound() {
+        tone(170, 72, 0.2, "square", 0.065);
+        tone(680, 120, 0.16, "sawtooth", 0.04, 0.02);
+      }
+
+      function playCheatSting() {
+        tone(220, 440, 0.12, "square", 0.038);
+        tone(330, 660, 0.13, "triangle", 0.05, 0.09);
+        tone(510, 185, 0.22, "sawtooth", 0.035, 0.2);
+      }
+
+      function fxPoint(index) {
+        return {
+          x: ((colOf(index) + 0.5) / BOARD_SIZE) * 100,
+          y: ((rowOf(index) + 0.5) / BOARD_SIZE) * 100
+        };
+      }
+
+      function removeOnAnimationEnd(element) {
+        element.addEventListener("animationend", () => element.remove(), { once: true });
+        dom.burstLayer.appendChild(element);
+        return element;
+      }
+
+      function shakeBoard(tier = "small") {
+        const classes = ["shake-small", "shake-medium", "shake-large", "tilting"];
+        dom.boardWrap.classList.remove(...classes);
+        void dom.boardWrap.offsetWidth;
+        dom.boardWrap.classList.add(tier === "large" ? "shake-large" : tier === "medium" ? "shake-medium" : tier === "tilt" ? "tilting" : "shake-small");
+      }
+
+      function flashScreen() {
+        dom.screenFlash.classList.remove("show");
+        void dom.screenFlash.offsetWidth;
+        dom.screenFlash.classList.add("show");
+      }
+
+      function spawnMoveStreak(from, to, color) {
+        const start = fxPoint(from);
+        const end = fxPoint(to);
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const streak = document.createElement("span");
+        streak.className = "move-streak";
+        streak.style.setProperty("--x", `${start.x}%`);
+        streak.style.setProperty("--y", `${start.y}%`);
+        streak.style.setProperty("--length", `${Math.hypot(dx, dy)}%`);
+        streak.style.setProperty("--angle", `${Math.atan2(dy, dx) * 180 / Math.PI}deg`);
+        streak.style.setProperty("--color", color === PLAYER ? "#ff3b7a" : "#fff254");
+        removeOnAnimationEnd(streak);
+      }
+
+      function spawnBurst(index, color = "#fff254", count = 9) {
+        const point = fxPoint(index);
+        const boardWidth = Math.max(280, dom.board.clientWidth || 500);
+        for (let particleIndex = 0; particleIndex < count; particleIndex += 1) {
+          const angle = (Math.PI * 2 * particleIndex / count) + Math.random() * 0.42;
+          const distance = boardWidth * (0.055 + Math.random() * 0.09);
+          const particle = document.createElement("span");
+          particle.className = "fx-particle";
+          particle.style.setProperty("--x", `${point.x}%`);
+          particle.style.setProperty("--y", `${point.y}%`);
+          particle.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+          particle.style.setProperty("--spin", `${pick([-420, -270, 240, 390])}deg`);
+          particle.style.setProperty("--size", `${5 + Math.random() * 9}px`);
+          particle.style.setProperty("--duration", `${410 + Math.random() * 260}ms`);
+          particle.style.setProperty("--color", particleIndex % 3 === 0 ? "white" : color);
+          particle.style.setProperty("--radius", particleIndex % 2 ? "50%" : "2px");
+          removeOnAnimationEnd(particle);
+        }
+      }
+
+      function spawnRing(index, color = "#fff254") {
+        const point = fxPoint(index);
+        const ring = document.createElement("span");
+        ring.className = "fx-ring";
+        ring.style.setProperty("--x", `${point.x}%`);
+        ring.style.setProperty("--y", `${point.y}%`);
+        ring.style.setProperty("--color", color);
+        removeOnAnimationEnd(ring);
+      }
+
+      function comicWord(index, word, color = "#fff254") {
+        const point = fxPoint(index);
+        const readableX = Math.min(84, Math.max(16, point.x));
+        const readableY = Math.min(86, Math.max(16, point.y));
+        const pop = document.createElement("span");
+        pop.className = "comic-pop";
+        pop.textContent = word;
+        pop.style.setProperty("--x", `${readableX}%`);
+        pop.style.setProperty("--y", `${readableY}%`);
+        pop.style.setProperty("--color", color);
+        pop.style.setProperty("--rotate", `${-9 + Math.random() * 18}deg`);
+        removeOnAnimationEnd(pop);
+      }
+
+      function impactFeedback(index, tier = "medium", word = "BONK!", color = "#fff254") {
+        const strength = tier === "large" ? 18 : tier === "medium" ? 11 : 7;
+        shakeBoard(tier);
+        spawnBurst(index, color, strength);
+        spawnRing(index, color);
+        if (word) comicWord(index, word, color);
+        const point = fxPoint(index);
+        dom.impactFlash.style.setProperty("--x", `${point.x}%`);
+        dom.impactFlash.style.setProperty("--y", `${point.y}%`);
+        dom.impactFlash.classList.remove("show");
+        void dom.impactFlash.offsetWidth;
+        dom.impactFlash.classList.add("show");
+        if (tier === "large") flashScreen();
+      }
+
+      function moveFeedback(move, piece, promoted = false) {
+        spawnMoveStreak(move.from, move.to, piece.color);
+        const captured = move.capture !== null;
+        schedule(() => {
+          const word = promoted ? "KING!" : captured ? "CRUNCH!" : piece.color === AI ? "BOING!" : "POP!";
+          impactFeedback(move.to, promoted || captured ? "medium" : "small", word, piece.color === PLAYER ? "#ff6b8f" : "#fff254");
+          if (captured) playCaptureSound(); else playMoveSound(piece.color);
+        }, 90);
+      }
+
+      function confettiBurst(count = 28) {
+        const palette = ["#fff254", "#ff3b7a", "#36ddff", "#7a34ef", "#70e0a1", "white"];
+        for (let index = 0; index < count; index += 1) {
+          const particle = document.createElement("span");
+          particle.className = "fx-particle";
+          particle.style.setProperty("--x", `${12 + Math.random() * 76}%`);
+          particle.style.setProperty("--y", `${10 + Math.random() * 36}%`);
+          particle.style.setProperty("--dx", `${-90 + Math.random() * 180}px`);
+          particle.style.setProperty("--dy", `${70 + Math.random() * 190}px`);
+          particle.style.setProperty("--spin", `${-720 + Math.random() * 1440}deg`);
+          particle.style.setProperty("--size", `${6 + Math.random() * 10}px`);
+          particle.style.setProperty("--duration", `${650 + Math.random() * 550}ms`);
+          particle.style.setProperty("--color", pick(palette));
+          particle.style.setProperty("--radius", index % 3 ? "2px" : "50%");
+          removeOnAnimationEnd(particle);
+        }
+      }
+
+      function clearFx() {
+        dom.burstLayer.replaceChildren();
+        dom.boardWrap.classList.remove("shake-small", "shake-medium", "shake-large", "tilting");
+        dom.impactFlash.classList.remove("show");
+        dom.comboStamp.classList.remove("show");
+        dom.screenFlash.classList.remove("show");
+      }
+
       function createBoard() {
         const fragment = document.createDocumentFragment();
         for (let index = 0; index < 64; index += 1) {
@@ -1364,7 +1805,7 @@
         if (piece.type === "donut") {
           return `<span class="donut-piece ${extraClass}" aria-hidden="true">🍩</span>`;
         }
-        const classes = ["checker", piece.color, piece.king ? "king" : "", piece.giant ? "giant" : "", extraClass]
+        const classes = ["checker", piece.color, piece.king ? "king" : "", piece.giant ? "giant" : "", piece.tiny ? "tiny" : "", piece.frozenTurns > 0 ? "frozen" : "", extraClass]
           .filter(Boolean)
           .join(" ");
         return `<span class="${classes}" aria-hidden="true"></span>`;
@@ -1386,11 +1827,13 @@
           if (legalTargets.has(index)) classes.push("legal", legalTargets.get(index).capture !== null ? "capture" : "");
           if (movable.has(index) || legalTargets.has(index)) classes.push("interactive");
           if (state.pitIndex === index) classes.push("pit");
+          if (state.lavaIndices.has(index)) classes.push("lava");
           if (extraClasses.has(index)) classes.push(extraClasses.get(index));
           square.className = classes.filter(Boolean).join(" ");
 
           const bits = [];
           if (state.pitIndex === index) bits.push('<span class="pit-hole" aria-hidden="true"></span>');
+          if (state.lavaIndices.has(index)) bits.push('<span class="lava-pool" aria-hidden="true">🔥</span>');
           if (state.blocked.has(index)) bits.push('<span class="cone" aria-hidden="true">🚧</span>');
           if (value) bits.push(pieceMarkup(value, extraClasses.get(index) || ""));
           square.innerHTML = bits.join("");
@@ -1402,6 +1845,7 @@
           if (value?.type === "donut") contents = "player checker transformed into a donut";
           if (isPiece(value)) contents = `${value.color === PLAYER ? "red player" : "black AI"} ${value.king ? "king" : "checker"}`;
           if (state.pitIndex === index) contents += ", contains a pitfall";
+          if (state.lavaIndices.has(index)) contents += ", floor is lava";
           square.setAttribute("aria-label", `Row ${row}, column ${column}: ${contents}`);
           square.disabled = state.phase !== "player";
         });
@@ -1433,7 +1877,7 @@
 
       function getMovesForPiece(index, board = state.board) {
         const piece = board[index];
-        if (!isPiece(piece)) return { captures: [], regular: [] };
+        if (!isPiece(piece) || piece.frozenTurns > 0) return { captures: [], regular: [] };
         const captures = [];
         const regular = [];
         const row = rowOf(index);
@@ -1533,35 +1977,85 @@
         return piece;
       }
 
+      function capturePlayerSnapshot() {
+        return {
+          board: state.board.map((piece) => piece ? { ...piece } : null),
+          pitIndex: state.pitIndex,
+          lavaIndices: [...state.lavaIndices],
+          blocked: [...state.blocked]
+        };
+      }
+
+      function restorePlayerSnapshot(snapshot) {
+        if (!snapshot) return false;
+        state.board = snapshot.board.map((piece) => piece ? { ...piece } : null);
+        state.pitIndex = snapshot.pitIndex;
+        state.lavaIndices = new Set(snapshot.lavaIndices);
+        state.blocked = new Set(snapshot.blocked);
+        return true;
+      }
+
+      function applyMoonGravity(from, piece) {
+        if (!state.moonGravityArmed || piece.color !== PLAYER) return from;
+        state.moonGravityArmed = false;
+        const row = rowOf(from);
+        const column = colOf(from);
+        const targets = shuffle([[-1,-1],[-1,1],[1,-1],[1,1]])
+          .map(([rowOffset, columnOffset]) => [row + rowOffset, column + columnOffset])
+          .filter(([nextRow, nextColumn]) => inBounds(nextRow, nextColumn))
+          .map(([nextRow, nextColumn]) => toIndex(nextRow, nextColumn))
+          .filter((index) => !state.board[index] && !state.blocked.has(index));
+        if (!targets.length) return from;
+        const destination = pick(targets);
+        state.board[from] = null;
+        state.board[destination] = piece;
+        if (rowOf(destination) === 0) piece.king = true;
+        showCheatBanner("Moon Gravity Aftershock", "FWEEEE! Your checker floated past the square you chose!");
+        setBotDialogue("Gravity is lower today. I checked with the moon manager.");
+        renderBoard(new Map([[destination, "ai-moving"]]));
+        spawnMoveStreak(from, destination, PLAYER);
+        schedule(() => impactFeedback(destination, "medium", "FWEEE!", "#36ddff"), 80);
+        return destination;
+      }
+
       function executePlayerMove(move, wasDragged) {
+        if (state.chainFrom === null) state.lastPlayerSnapshot = capturePlayerSnapshot();
         if (state.magnetArmed) {
           triggerMagnetInterference(move.from, move.to, wasDragged);
           return;
         }
 
+        const movingPiece = state.board[move.from];
+        const wasKing = movingPiece.king;
         const piece = applyMove(move);
         state.selected = null;
         state.legalMoves = [];
         renderBoard(new Map([[move.to, "ai-moving"]]));
+        moveFeedback(move, piece, !wasKing && piece.king);
+        const landingIndex = applyMoonGravity(move.to, piece);
+        const gravityMoved = landingIndex !== move.to;
 
-        if (state.pitIndex === move.to) {
-          setStatus("FWOOOOP! Your checker fell into the surprise hole!", "ai");
-          setBotDialogue("That hole had a tiny sign. You should have read the tiny sign.");
+        if (state.pitIndex === landingIndex || state.lavaIndices.has(landingIndex)) {
+          const landedOnLava = state.lavaIndices.has(landingIndex);
+          setStatus(landedOnLava ? "SIZZLE! Your checker discovered that the floor was, in fact, lava!" : "FWOOOOP! Your checker fell into the surprise hole!", "ai");
+          setBotDialogue(landedOnLava ? "The floor was clearly orange and bubbling. Skill issue." : "That hole had a tiny sign. You should have read the tiny sign.");
           playBoing();
+          impactFeedback(landingIndex, "large", landedOnLava ? "SIZZLE!" : "FWOOOP!", landedOnLava ? "#ff8a26" : "#7a34ef");
           schedule(() => {
-            state.board[move.to] = null;
-            state.pitIndex = null;
+            state.board[landingIndex] = null;
+            if (state.pitIndex === landingIndex) state.pitIndex = null;
+            state.lavaIndices.delete(landingIndex);
             renderBoard();
             endPlayerTurn();
-          }, 640);
+          }, 720);
           return;
         }
 
-        if (move.capture !== null) {
-          const moreCaptures = getMovesForPiece(move.to).captures;
+        if (move.capture !== null && !gravityMoved) {
+          const moreCaptures = getMovesForPiece(landingIndex).captures;
           if (moreCaptures.length) {
-            state.chainFrom = move.to;
-            state.selected = move.to;
+            state.chainFrom = landingIndex;
+            state.selected = landingIndex;
             state.legalMoves = moreCaptures;
             renderBoard();
             setStatus("Multi-jump! Keep hopping with the same checker.");
@@ -1574,10 +2068,16 @@
       }
 
       function endPlayerTurn() {
+        const completedReverseTurn = state.reverseActive;
         state.chainFrom = null;
         state.selected = null;
         state.legalMoves = [];
         state.reverseActive = false;
+        if (!completedReverseTurn) {
+          state.board.forEach((piece) => {
+            if (isPiece(piece) && piece.color === PLAYER && piece.frozenTurns > 0) piece.frozenTurns -= 1;
+          });
+        }
         state.phase = "ai";
         state.turn += 1;
         renderBoard();
@@ -1655,6 +2155,8 @@
         setBotDialogue("Magnets are mysterious, especially when I control them with a button.");
         awardAiScore(999);
         renderBoard(new Map([[target, "ai-moving"]]));
+        spawnMoveStreak(from, target, PLAYER);
+        schedule(() => impactFeedback(target, "large", "YOINK!", "#36ddff"), 80);
         if (state.pitIndex === target) {
           schedule(() => {
             state.board[target] = null;
@@ -1680,6 +2182,7 @@
         state.lastCheat = cheatId;
         state.cheatCount += 1;
         state.cheatHistory.push(cheatId);
+        state.comboPending = state.cheatCount % 4 === 0;
         dom.specialRule.textContent = `Current nonsense: ${CHEAT_NAMES[cheatId]}`;
         awardAiScore();
         updateHud();
@@ -1690,6 +2193,8 @@
         showCheatBanner(CHEAT_NAMES[cheatId], message);
         setBotDialogue(dialogue);
         setStatus(`${CHEAT_NAMES[cheatId]} is happening!`, "ai");
+        playCheatSting();
+        impactFeedback(pick([27, 28, 35, 36]), "medium", CHEAT_WORDS[cheatId] || "CHEAT!", "#fff254");
       }
 
       function startAiTurn() {
@@ -1699,9 +2204,14 @@
           finishGame("Chaos Bot repossessed every checker on the board.");
           return;
         }
-        const shouldCheat = state.aiTurns <= 2 || Math.random() < 0.82;
-        if (shouldCheat) runCheat(drawCheat(), performAiMove);
-        else performAiMove();
+        const shouldCheat = state.aiTurns <= 2 || Math.random() < chaosPhaseInfo().chance;
+        if (shouldCheat) {
+          const cheatId = drawCheat();
+          const afterCheat = () => state.comboPending ? runComboAftershock(performAiMove) : performAiMove();
+          runCheat(cheatId, afterCheat);
+        } else {
+          performAiMove();
+        }
       }
 
       function safeContinue(callback, delay = 0) {
@@ -1719,11 +2229,74 @@
       function animateAndRemove(indices, animationClass, done) {
         const classes = new Map(indices.map((index) => [index, animationClass]));
         renderBoard(classes);
+        indices.forEach((index, order) => schedule(() => impactFeedback(index, "large", animationClass === "shoved" ? "YEET!" : "POOF!", "#ff6b8f"), order * 80));
         safeContinue(() => {
           indices.forEach((index) => { state.board[index] = null; });
           renderBoard();
           done();
-        }, 620);
+        }, 760);
+      }
+
+      function runComboAftershock(done) {
+        state.comboPending = false;
+        state.comboCount += 1;
+        dom.comboStamp.textContent = pick(["DOUBLE\nNONSENSE!", "COMBO\nCHEAT!", "RULES x2!", "BONUS\nFELONY!"]);
+        dom.comboStamp.classList.remove("show");
+        void dom.comboStamp.offsetWidth;
+        dom.comboStamp.classList.add("show");
+        awardAiScore(999);
+        confettiBurst(34);
+        flashScreen();
+        shakeBoard("large");
+
+        const aftershock = pick(["crown", "clone", "freeze", "lava"]);
+        let message = "The previous cheat came with a free bonus cheat!";
+        if (aftershock === "crown") {
+          const targets = randomPieceIndices(AI);
+          if (targets.length) {
+            const target = pick(targets);
+            state.board[target].king = true;
+            state.board[target].giant = true;
+            renderBoard(new Map([[target, "ai-moving"]]));
+            impactFeedback(target, "large", "CROWN!", "#fff254");
+          }
+          message = "COMBO AFTERSHOCK: one complimentary enormous crown!";
+        } else if (aftershock === "clone") {
+          const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
+          if (targets.length) {
+            const target = pick(targets);
+            state.board[target] = makePiece(AI, { king: true });
+            renderBoard(new Map([[target, "ai-moving"]]));
+            impactFeedback(target, "large", "FREEBIE!", "#fff254");
+          }
+          message = "COMBO AFTERSHOCK: a free king fell out of the receipt!";
+        } else if (aftershock === "freeze") {
+          const targets = randomPieceIndices(PLAYER);
+          if (targets.length) {
+            const target = pick(targets);
+            state.board[target].frozenTurns = 1;
+            state.board[target].tiny = true;
+            renderBoard();
+            impactFeedback(target, "large", "TIME-OUT!", "#36ddff");
+          }
+          message = "COMBO AFTERSHOCK: somebody has to sit quietly and be tiny!";
+        } else {
+          const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
+          if (targets.length) {
+            const target = pick(targets);
+            state.lavaIndices.add(target);
+            renderBoard();
+            impactFeedback(target, "large", "HOT!", "#ff8a26");
+          }
+          message = "COMBO AFTERSHOCK: a bonus lava square, because flooring is hard!";
+        }
+
+        showCheatBanner("Double Nonsense Combo", message);
+        setBotDialogue("Every fourth cheat earns me a free aftershock. It is in the loyalty program.");
+        safeContinue(() => {
+          dom.comboStamp.classList.remove("show");
+          done();
+        }, 980);
       }
 
       function runCheat(cheatId, done) {
@@ -1760,6 +2333,7 @@
           if (target === undefined) { done(); return; }
           announceCheat(cheatId, "My checker moved one inch. THAT COUNTS AS THE KING ROW!", "Please admire His Extremely Large Majesty.");
           const moves = getMovesForPiece(target).regular;
+          const origin = target;
           let destination = target;
           if (moves.length) {
             destination = pick(moves).to;
@@ -1769,6 +2343,8 @@
           state.board[destination].king = true;
           state.board[destination].giant = true;
           renderBoard(new Map([[destination, "ai-moving"]]));
+          if (origin !== destination) spawnMoveStreak(origin, destination, AI);
+          impactFeedback(destination, "large", "ROYAL!", "#fff254");
           safeContinue(done, 850);
           return;
         }
@@ -1776,12 +2352,17 @@
         if (cheatId === "pocketSand") {
           announceCheat(cheatId, "POCKET SAND! Nobody look at the board!", "Shh. My pieces are doing a completely normal double scoot.");
           dom.sandCloud.classList.add("show");
+          let moved = [];
           safeContinue(() => {
-            advanceAiPieces(2);
+            moved = advanceAiPieces(2);
             renderBoard();
           }, 400);
           safeContinue(() => {
             dom.sandCloud.classList.remove("show");
+            moved.forEach(({ from, to, piece }, order) => schedule(() => {
+              spawnMoveStreak(from, to, piece.color);
+              impactFeedback(to, "medium", "SCOOT!", "#fff254");
+            }, order * 90));
             done();
           }, 1100);
           return;
@@ -1791,17 +2372,24 @@
           announceCheat(cheatId, "WHOOSH! Three checkers forgot to hold onto something!", "Weather is a valid checkers strategy. Look it up in my imaginary book.");
           const movable = shuffle(state.board.map((piece, index) => isPiece(piece) ? index : null).filter((index) => index !== null));
           let moved = 0;
+          const moves = [];
           for (const from of movable) {
             const directions = shuffle([-1, 1]);
             const destination = directions.map((offset) => from + offset).find((to) => rowOf(to) === rowOf(from) && !state.board[to] && !state.blocked.has(to));
             if (destination !== undefined) {
               state.board[destination] = state.board[from];
               state.board[from] = null;
+              moves.push({ from, to: destination, color: state.board[destination].color });
               moved += 1;
             }
             if (moved === 3) break;
           }
           renderBoard();
+          shakeBoard("tilt");
+          moves.forEach(({ from, to, color }, order) => schedule(() => {
+            spawnMoveStreak(from, to, color);
+            impactFeedback(to, "medium", "WHOOSH!", "#36ddff");
+          }, order * 80));
           safeContinue(done, 850);
           return;
         }
@@ -1820,6 +2408,7 @@
           state.pitIndex = pick(targets);
           announceCheat(cheatId, "I installed a mystery hole. Safety inspection pending!", "It could be anywhere. Except I know exactly where it is because it is very visible.");
           renderBoard();
+          if (state.pitIndex !== undefined) impactFeedback(state.pitIndex, "large", "HOLE!", "#7a34ef");
           safeContinue(done, 850);
           return;
         }
@@ -1831,7 +2420,11 @@
           dom.fxEmoji.classList.add("show");
           safeContinue(() => {
             const targets = randomPieceIndices(PLAYER);
-            if (targets.length) state.board[pick(targets)] = null;
+            if (targets.length) {
+              const target = pick(targets);
+              impactFeedback(target, "large", "SNATCH!", "#ff6b8f");
+              state.board[target] = null;
+            }
             renderBoard();
           }, 380);
           safeContinue(() => {
@@ -1864,6 +2457,7 @@
           targets.forEach((index) => state.blocked.add(index));
           announceCheat(cheatId, "These squares are closed for road work until never.", "The construction crew is two cones wearing one hard hat.");
           renderBoard();
+          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "CLONK!", "#ff8a26"), order * 90));
           safeContinue(done, 850);
           return;
         }
@@ -1871,21 +2465,26 @@
         if (cheatId === "clone") {
           const sources = randomPieceIndices(AI);
           const targets = state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) ? index : null).filter((index) => index !== null);
+          let cloneTarget = null;
           if (sources.length && targets.length) {
             const sourcePiece = state.board[pick(sources)];
-            state.board[pick(targets)] = makePiece(AI, { king: sourcePiece.king, giant: sourcePiece.giant });
+            cloneTarget = pick(targets);
+            state.board[cloneTarget] = makePiece(AI, { king: sourcePiece.king, giant: sourcePiece.giant });
           }
           announceCheat(cheatId, "Buy one evil checker, get one evil checker FREE!", "The coupon expired yesterday, so naturally I used it twice.");
           renderBoard();
+          if (cloneTarget !== null) impactFeedback(cloneTarget, "large", "COPY!", "#fff254");
           safeContinue(done, 850);
           return;
         }
 
         if (cheatId === "donut") {
           const targets = randomPieceIndices(PLAYER);
-          if (targets.length) state.board[pick(targets)] = { type: "donut", color: PLAYER };
+          const target = targets.length ? pick(targets) : null;
+          if (target !== null) state.board[target] = { type: "donut", color: PLAYER };
           announceCheat(cheatId, "Your checker took a snack break and became the snack.", "Technically donuts move diagonally if you roll them. Please don't.");
           renderBoard();
+          if (target !== null) impactFeedback(target, "large", "DONUT!", "#ff6b8f");
           safeContinue(done, 850);
           return;
         }
@@ -1896,6 +2495,7 @@
             const available = !isPiece(piece) || piece.color !== AI;
             return available && isDark(index) && rowOf(index) >= 5 && !state.blocked.has(index) ? index : null;
           }).filter((index) => index !== null);
+          let teleportMove = null;
           if (sources.length && targets.length) {
             const source = pick(sources);
             const destination = pick(targets);
@@ -1904,9 +2504,14 @@
             state.board[destination] = piece;
             piece.king = true;
             piece.giant = true;
+            teleportMove = { from: source, to: destination };
           }
           announceCheat(cheatId, "My checker bought a teleportation license at the gas station.", "One blink: king row. Two blinks: enormous crown. Very official.");
           renderBoard();
+          if (teleportMove) {
+            spawnMoveStreak(teleportMove.from, teleportMove.to, AI);
+            impactFeedback(teleportMove.to, "large", "ZAP!", "#36ddff");
+          }
           safeContinue(done, 900);
           return;
         }
@@ -1920,9 +2525,133 @@
           return;
         }
 
-        tinyHorseMove();
+        if (cheatId === "shrinkRay") {
+          const candidates = randomPieceIndices(PLAYER).filter((index) => !state.board[index].tiny);
+          const targets = candidates.length ? candidates : randomPieceIndices(PLAYER);
+          if (!targets.length) { done(); return; }
+          const target = pick(targets);
+          state.board[target].tiny = true;
+          announceCheat(cheatId, "PEW! Your checker has been resized to fun-size!", "It uses less board now, so technically I saved you space.");
+          renderBoard();
+          impactFeedback(target, "large", "teeny!", "#36ddff");
+          safeContinue(done, 900);
+          return;
+        }
+
+        if (cheatId === "timeOut") {
+          const candidates = randomPieceIndices(PLAYER).filter((index) => state.board[index].frozenTurns === 0);
+          const targets = candidates.length ? candidates : randomPieceIndices(PLAYER);
+          if (!targets.length) { done(); return; }
+          const target = pick(targets);
+          state.board[target].frozenTurns = 1;
+          announceCheat(cheatId, "This checker needs to think about what it did. One-turn time-out!", "The chair is invisible, but the disappointment is extremely visible.");
+          renderBoard();
+          impactFeedback(target, "large", "SIT!", "#36ddff");
+          safeContinue(done, 900);
+          return;
+        }
+
+        if (cheatId === "lavaFloor") {
+          const targets = shuffle(state.board.map((piece, index) => !piece && isDark(index) && !state.blocked.has(index) && state.pitIndex !== index ? index : null).filter((index) => index !== null)).slice(0, 3);
+          targets.forEach((index) => state.lavaIndices.add(index));
+          announceCheat(cheatId, "Three squares are now lava. My pieces brought oven mitts!", "Your pieces did not sign the lava waiver. I signed it for them.");
+          renderBoard();
+          targets.forEach((index, order) => schedule(() => impactFeedback(index, "medium", "HOT!", "#ff8a26"), order * 100));
+          safeContinue(done, 1000);
+          return;
+        }
+
+        if (cheatId === "exchange") {
+          const playerTargets = randomPieceIndices(PLAYER);
+          const aiTargets = randomPieceIndices(AI);
+          if (!playerTargets.length || !aiTargets.length) { done(); return; }
+          const playerIndex = pick(playerTargets);
+          const aiIndex = pick(aiTargets);
+          [state.board[playerIndex], state.board[aiIndex]] = [state.board[aiIndex], state.board[playerIndex]];
+          announceCheat(cheatId, "Two checkers are studying abroad on the opposite side of the board!", "The exchange forms were mostly crayon and one grocery receipt.");
+          renderBoard(new Map([[playerIndex, "traitor-flip"], [aiIndex, "traitor-flip"]]));
+          spawnMoveStreak(playerIndex, aiIndex, AI);
+          spawnMoveStreak(aiIndex, playerIndex, PLAYER);
+          impactFeedback(playerIndex, "large", "SWAP!", "#fff254");
+          impactFeedback(aiIndex, "large", "SWAP!", "#ff6b8f");
+          safeContinue(done, 1050);
+          return;
+        }
+
+        if (cheatId === "doubleTrouble") {
+          state.aiBonusMoves = Math.max(state.aiBonusMoves, 1);
+          announceCheat(cheatId, "The calendar says Tuesday, so I get TWO moves!", "It may not be Tuesday where you live. My calendar only has Tuesdays.");
+          dom.comboStamp.textContent = "TWO MOVES!";
+          dom.comboStamp.classList.remove("show");
+          void dom.comboStamp.offsetWidth;
+          dom.comboStamp.classList.add("show");
+          confettiBurst(24);
+          safeContinue(() => {
+            dom.comboStamp.classList.remove("show");
+            done();
+          }, 900);
+          return;
+        }
+
+        if (cheatId === "moonGravity") {
+          state.moonGravityArmed = true;
+          announceCheat(cheatId, "Your next checker will keep floating after it lands!", "The moon personally asked me to make your move less accurate.");
+          dom.boardWrap.classList.add("tilting");
+          safeContinue(done, 900);
+          return;
+        }
+
+        if (cheatId === "replayReview") {
+          const restored = restorePlayerSnapshot(state.lastPlayerSnapshot);
+          if (!restored) {
+            const targets = randomPieceIndices(PLAYER);
+            if (targets.length) state.board[pick(targets)] = null;
+          }
+          state.lastPlayerSnapshot = null;
+          announceCheat(cheatId, restored ? "After review, your entire last move NEVER HAPPENED!" : "The replay camera was off, so I guessed against you!", "The referee is me wearing a striped napkin.");
+          renderBoard();
+          flashScreen();
+          confettiBurst(20);
+          impactFeedback(36, "large", "NOPE!", "#ff6b8f");
+          safeContinue(done, 1050);
+          return;
+        }
+
+        if (cheatId === "boardTilt") {
+          const columnDirection = pick([-1, 1]);
+          const sources = shuffle(state.board.map((piece, index) => isPiece(piece) ? index : null).filter((index) => index !== null));
+          const moved = [];
+          for (const from of sources) {
+            const row = rowOf(from) + 1;
+            const column = colOf(from) + columnDirection;
+            if (!inBounds(row, column)) continue;
+            const to = toIndex(row, column);
+            if (state.board[to] || state.blocked.has(to)) continue;
+            state.board[to] = state.board[from];
+            state.board[from] = null;
+            moved.push({ from, to, color: state.board[to].color });
+            if (moved.length === 4) break;
+          }
+          announceCheat(cheatId, "WHO LEANED ON THE TABLE? Four pieces slid downhill!", "Please keep all elbows, knees, and suspicious robots off the furniture.");
+          renderBoard();
+          shakeBoard("tilt");
+          moved.forEach(({ from, to, color }, order) => {
+            schedule(() => {
+              spawnMoveStreak(from, to, color);
+              impactFeedback(to, "medium", "SLIDE!", color === PLAYER ? "#ff6b8f" : "#fff254");
+            }, order * 90);
+          });
+          safeContinue(done, 1100);
+          return;
+        }
+
+        const horseMove = tinyHorseMove();
         announceCheat(cheatId, "For one turn, this is chess! My checker moves like a tiny horse!", "Neigh. That means the move is legal. Neigh is a legal word.");
         renderBoard();
+        if (horseMove) {
+          spawnMoveStreak(horseMove.from, horseMove.to, AI);
+          impactFeedback(horseMove.to, "large", "NEIGH!", "#fff254");
+        }
         safeContinue(done, 850);
       }
 
@@ -1940,6 +2669,7 @@
 
       function advanceAiPieces(amount) {
         let advanced = 0;
+        const moved = [];
         for (const from of shuffle(randomPieceIndices(AI))) {
           const piece = state.board[from];
           const options = [-1, 1]
@@ -1951,10 +2681,12 @@
           const destination = pick(options);
           state.board[from] = null;
           state.board[destination] = piece;
+          moved.push({ from, to: destination, piece });
           if (rowOf(destination) === 7) piece.king = true;
           advanced += 1;
           if (advanced === amount) break;
         }
+        return moved;
       }
 
       function rearrangeInAiFavor() {
@@ -1987,6 +2719,7 @@
             return;
           }
           const next = pick(targets);
+          const previous = current;
           state.board[current] = null;
           state.board[next] = piece;
           current = next;
@@ -1997,6 +2730,8 @@
             if (victims.length) state.board[pick(victims)] = null;
           }
           renderBoard(new Map([[current, "ai-moving"]]));
+          spawnMoveStreak(previous, current, AI);
+          impactFeedback(current, hops === 4 ? "large" : "small", hops === 4 ? "CRUNCH!" : "BOING!", "#fff254");
           schedule(hop, 190);
         }
 
@@ -2016,10 +2751,12 @@
             if (!occupant || (isPiece(occupant) && occupant.color === PLAYER)) candidates.push({ from, to });
           });
         });
-        if (!candidates.length) return;
+        if (!candidates.length) return null;
         const move = pick(candidates);
-        state.board[move.to] = state.board[move.from];
+        const piece = state.board[move.from];
+        state.board[move.to] = piece;
         state.board[move.from] = null;
+        return { ...move, capture: null, piece };
       }
 
       function chooseAiMove() {
@@ -2027,13 +2764,29 @@
         if (!moves.length) return null;
         const scored = moves.map((move) => {
           let score = Math.random() * 3;
-          if (move.capture !== null) score += 30;
+          if (move.capture !== null) {
+            const victim = state.board[move.capture];
+            score += victim?.king ? 48 : 32;
+            if (victim?.tiny) score += 2;
+          }
           if (rowOf(move.to) === 7) score += 12;
           score += 4 - Math.abs(3.5 - colOf(move.to));
           if (state.pitIndex === move.to) score -= 20;
+          if (state.lavaIndices.has(move.to)) score += 4;
+          if (colOf(move.to) === 0 || colOf(move.to) === 7) score += 2.5;
+
+          const board = state.board.map((piece) => piece ? { ...piece } : null);
+          const movingPiece = board[move.from];
+          board[move.from] = null;
+          board[move.to] = movingPiece;
+          if (move.capture !== null) board[move.capture] = null;
+          const threatened = board.some((piece, index) => isPiece(piece) && piece.color === PLAYER
+            && getMovesForPiece(index, board).captures.some((capture) => capture.capture === move.to));
+          if (threatened) score -= 9;
           return { move, score };
         }).sort((a, b) => b.score - a.score);
-        return pick(scored.slice(0, Math.min(3, scored.length))).move;
+        const choicePool = state.cheatCount < 5 ? 3 : state.cheatCount < 12 ? 2 : 1;
+        return pick(scored.slice(0, Math.min(choicePool, scored.length))).move;
       }
 
       function performAiMove() {
@@ -2044,9 +2797,11 @@
           safeContinue(performAiMove, 800);
           return;
         }
+        const movingPiece = state.board[move.from];
+        const wasKing = movingPiece.king;
         const piece = applyMove(move);
         renderBoard(new Map([[move.to, "ai-moving"]]));
-        playBoing();
+        moveFeedback(move, piece, !wasKing && piece.king);
 
         if (move.capture !== null) {
           const captures = getMovesForPiece(move.to).captures;
@@ -2067,14 +2822,29 @@
           return;
         }
         const move = pick(captures);
-        applyMove(move);
+        const piece = applyMove(move);
         renderBoard(new Map([[move.to, "ai-moving"]]));
-        playBoing();
+        moveFeedback(move, piece, false);
         safeContinue(() => performAiCaptureChain(move.to), 390);
       }
 
       function finishAiTurn() {
         if (state.phase === "over") return;
+        if (state.aiBonusMoves > 0) {
+          state.aiBonusMoves -= 1;
+          showCheatBanner("Double-Move Tuesday", "BONUS MOVE! My calendar remains legally questionable.");
+          setBotDialogue("That was move one. Please remain seated for move two.");
+          dom.comboStamp.textContent = "AGAIN!";
+          dom.comboStamp.classList.remove("show");
+          void dom.comboStamp.offsetWidth;
+          dom.comboStamp.classList.add("show");
+          impactFeedback(28, "large", "AGAIN!", "#fff254");
+          safeContinue(() => {
+            dom.comboStamp.classList.remove("show");
+            performAiMove();
+          }, 720);
+          return;
+        }
         if (countPieces(PLAYER) === 0 || !getLegalMoves(PLAYER).length) {
           finishGame("Chaos Bot won using a sophisticated mixture of checkers and nonsense.");
           return;
@@ -2084,6 +2854,7 @@
 
       function startPlayerTurn() {
         state.phase = "player";
+        state.survivalStamps += 1;
         state.reverseActive = state.reverseNext;
         state.reverseNext = false;
         state.selected = null;
@@ -2099,7 +2870,7 @@
           setBotDialogue(pick([
             "Everything is normal now. That sentence has never caused concern.",
             "Your move! I promise not to cheat until at least several milliseconds from now.",
-            "I have seventeen pranks and no adult supervision.",
+            "I have twenty-five pranks and no adult supervision.",
             "Remember: mandatory jumps, optional trust."
           ]));
         }
@@ -2131,6 +2902,9 @@
         dom.resultModal.classList.add("show");
         dom.playAgainButton.focus();
         playHorn();
+        flashScreen();
+        confettiBurst(70);
+        shakeBoard("large");
       }
 
       function reportCheating() {
@@ -2143,6 +2917,8 @@
         dom.reportButton.classList.add("cry");
         showCheatBanner("Complaint Department", state.reportCount === 1 ? "REPORT RECEIVED! The clown ate it." : "HONK HONK! Your complaint has been upgraded to confetti.");
         setBotDialogue("Thank you for contacting support. Your ticket number is 🤡.");
+        confettiBurst(30);
+        impactFeedback(36, "large", "HONK!", "#fff254");
         schedule(() => dom.reportButton.classList.remove("cry"), 850);
       }
 
@@ -2158,9 +2934,13 @@
         state.legalMoves = [];
         state.pitIndex = null;
         state.blocked = new Set();
+        state.lavaIndices = new Set();
         state.magnetArmed = false;
+        state.moonGravityArmed = false;
         state.reverseNext = false;
         state.reverseActive = false;
+        state.aiBonusMoves = 0;
+        state.lastPlayerSnapshot = null;
         state.playerScore = 0;
         state.aiScore = 420;
         state.turn = 1;
@@ -2169,7 +2949,12 @@
         state.cheatDeck = [];
         state.cheatHistory = [];
         state.lastCheat = null;
+        state.comboPending = false;
+        state.comboCount = 0;
+        state.survivalStamps = 0;
         state.reportCount = 0;
+        bannerToken += 1;
+        clearFx();
         dom.bribeModal.classList.remove("show");
         dom.resultModal.classList.remove("show");
         dom.outage.classList.remove("show");
@@ -2242,20 +3027,29 @@
             aiPieces: countPieces(AI),
             pitIndex: state.pitIndex,
             blocked: [...state.blocked],
+            lavaIndices: [...state.lavaIndices],
             magnetArmed: state.magnetArmed,
+            moonGravityArmed: state.moonGravityArmed,
             reverseNext: state.reverseNext,
+            aiBonusMoves: state.aiBonusMoves,
+            survivalStamps: state.survivalStamps,
+            comboCount: state.comboCount,
             lastCheat: state.lastCheat,
             cheatHistory: [...state.cheatHistory],
             board: state.board.map((piece) => {
               if (!piece) return null;
               if (piece.type === "donut") return "donut";
-              return `${piece.color}${piece.king ? "-king" : ""}${piece.giant ? "-giant" : ""}`;
+              return `${piece.color}${piece.king ? "-king" : ""}${piece.giant ? "-giant" : ""}${piece.tiny ? "-tiny" : ""}${piece.frozenTurns > 0 ? "-frozen" : ""}`;
             })
           }),
           triggerCheat: (cheatId) => {
             if (!CHEAT_NAMES[cheatId]) throw new Error(`Unknown cheat: ${cheatId}`);
             resetGame();
             state.phase = "ai";
+            if (cheatId === "replayReview") {
+              state.lastPlayerSnapshot = capturePlayerSnapshot();
+              applyMove({ from: 40, to: 33, capture: null });
+            }
             state.cheatDeck = [cheatId];
             renderBoard();
             runCheat(drawCheat(), () => {
@@ -2263,6 +3057,17 @@
               state.phase = "player";
               renderBoard();
             });
+          },
+          triggerCombo: () => {
+            resetGame();
+            state.phase = "ai";
+            state.cheatCount = 3;
+            state.cheatDeck = ["shrinkRay"];
+            const cheatId = drawCheat();
+            runCheat(cheatId, () => runComboAftershock(() => {
+              state.phase = "player";
+              renderBoard();
+            }));
           }
         };
       }
