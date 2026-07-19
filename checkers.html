@@ -1588,7 +1588,8 @@
         comboCount: 0,
         survivalStamps: 0,
         soundEnabled: true,
-        voiceCheatsUntilCallout: 1,
+        voiceTurnsUntilCallout: 1,
+        voiceCalloutPending: false,
         voiceCalloutCount: 0,
         reportCount: 0
       };
@@ -1958,7 +1959,7 @@
             if (requestToken !== voiceRequestToken) return;
             activeVoiceCheatId = null;
             voiceDucking = false;
-            state.voiceCheatsUntilCallout = 1;
+            state.voiceCalloutPending = true;
             console.warn("Chaos Bot voice will retry on the next cheat.", error);
           });
 
@@ -2594,11 +2595,19 @@
         impactFeedback(pick([27, 28, 35, 36]), "medium", CHEAT_WORDS[cheatId] || "CHEAT!", "#fff254");
       }
 
-      function shouldPlayVoiceCallout() {
+      function advanceVoiceCalloutCadence() {
         if (!state.soundEnabled) return false;
-        state.voiceCheatsUntilCallout -= 1;
-        if (state.voiceCheatsUntilCallout > 0) return false;
-        state.voiceCheatsUntilCallout = 3;
+        if (state.voiceCalloutPending) return true;
+        state.voiceTurnsUntilCallout -= 1;
+        if (state.voiceTurnsUntilCallout > 0) return false;
+        state.voiceTurnsUntilCallout = 3;
+        state.voiceCalloutPending = true;
+        return true;
+      }
+
+      function claimVoiceCallout() {
+        if (!state.voiceCalloutPending) return false;
+        state.voiceCalloutPending = false;
         state.voiceCalloutCount += 1;
         return true;
       }
@@ -2611,10 +2620,11 @@
           return;
         }
         const shouldCheat = state.aiTurns <= 2 || Math.random() < chaosPhaseInfo().chance;
+        const voiceDue = advanceVoiceCalloutCadence();
         if (shouldCheat) {
           const cheatId = drawCheat();
           const afterCheat = () => state.comboPending ? runComboAftershock(performAiMove) : performAiMove();
-          stageCheat(cheatId, afterCheat, shouldPlayVoiceCallout());
+          stageCheat(cheatId, afterCheat, voiceDue && claimVoiceCallout());
         } else {
           setStoryStep(2, "Ordinary AI move", "No special cheat this turn. Watch one black checker make a normal move.");
           setStatus("Chaos Bot is making one ordinary move. Probably.", "ai");
@@ -3387,7 +3397,8 @@
         state.comboPending = false;
         state.comboCount = 0;
         state.survivalStamps = 0;
-        state.voiceCheatsUntilCallout = 1;
+        state.voiceTurnsUntilCallout = 1;
+        state.voiceCalloutPending = false;
         state.voiceCalloutCount = 0;
         state.reportCount = 0;
         bannerToken += 1;
@@ -3485,7 +3496,8 @@
             voiceDucking,
             activeVoiceTime: audioContext && activeVoiceSource ? audioContext.currentTime - activeVoiceStartedAt : 0,
             voiceBuffersReady: cheatVoiceBuffers.size,
-            voiceCheatsUntilCallout: state.voiceCheatsUntilCallout,
+            voiceTurnsUntilCallout: state.voiceTurnsUntilCallout,
+            voiceCalloutPending: state.voiceCalloutPending,
             voiceCalloutCount: state.voiceCalloutCount,
             board: state.board.map((piece) => {
               if (!piece) return null;
@@ -3539,9 +3551,25 @@
           stopVoiceForTest: stopCheatVoice,
           voiceCadenceSequenceForTest: (count = 10) => {
             state.soundEnabled = true;
-            state.voiceCheatsUntilCallout = 1;
+            state.voiceTurnsUntilCallout = 1;
+            state.voiceCalloutPending = false;
             state.voiceCalloutCount = 0;
-            return Array.from({ length: count }, () => shouldPlayVoiceCallout());
+            return Array.from({ length: count }, () => {
+              const due = advanceVoiceCalloutCadence();
+              if (due) claimVoiceCallout();
+              return due;
+            });
+          },
+          voiceCadenceDeferredTest: () => {
+            state.soundEnabled = true;
+            state.voiceTurnsUntilCallout = 1;
+            state.voiceCalloutPending = false;
+            state.voiceCalloutCount = 0;
+            const dueOnNormalTurn = advanceVoiceCalloutCadence();
+            const stillDueOnNextTurn = advanceVoiceCalloutCadence();
+            const claimedOnCheat = claimVoiceCallout();
+            const followingTurnDue = advanceVoiceCalloutCadence();
+            return { dueOnNormalTurn, stillDueOnNextTurn, claimedOnCheat, followingTurnDue };
           },
           triggerCombo: () => {
             resetGame();
