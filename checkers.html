@@ -1588,25 +1588,26 @@
         comboCount: 0,
         survivalStamps: 0,
         soundEnabled: true,
+        voiceCheatsUntilCallout: 1,
+        voiceCalloutCount: 0,
         reportCount: 0
       };
 
       const timers = new Set();
       let nextPieceId = 1;
       let audioContext = null;
-      let activeCheatVoice = null;
+      let activeVoiceSource = null;
+      let activeVoiceGain = null;
       let activeVoiceCheatId = null;
+      let activeVoiceStartedAt = 0;
       let voiceDucking = false;
+      let voiceRequestToken = 0;
       let bribeContinuation = null;
       let dragState = null;
       let suppressClick = false;
       let bannerToken = 0;
-      const cheatVoicePlayers = new Map(Object.entries(CHEAT_VOICE_FILES).map(([cheatId, entry]) => {
-        const player = new Audio(entry.src);
-        player.preload = "auto";
-        player.playsInline = true;
-        return [cheatId, player];
-      }));
+      const cheatVoiceBuffers = new Map();
+      const cheatVoiceLoads = new Map();
 
       const dom = {
         board: document.getElementById("board"),
@@ -1822,14 +1823,14 @@
         });
       }
 
-      function stageCheat(cheatId, done) {
+      function stageCheat(cheatId, done, withVoice = false) {
         const guide = CHEAT_GUIDES[cheatId];
         const before = presentationSnapshot();
         setStoryStep(1, `1 · ${CHEAT_NAMES[cheatId]} incoming`, guide.warning);
         setStatus(`Cheat incoming: ${CHEAT_NAMES[cheatId]}. Read the warning, then watch the board.`, "ai");
         setBotDialogue("I am announcing the cheating first. That makes it educational.");
         shakeBoard("small");
-        const warningDelay = playCheatVoice(cheatId);
+        const warningDelay = withVoice ? playCheatVoice(cheatId) : CHEAT_PACE.warning;
 
         schedule(() => {
           if (state.phase === "over") return;
@@ -1877,40 +1878,89 @@
         return Math.pow(10, decibels / 20);
       }
 
+      function loadCheatVoice(cheatId) {
+        if (cheatVoiceBuffers.has(cheatId)) return Promise.resolve(cheatVoiceBuffers.get(cheatId));
+        if (cheatVoiceLoads.has(cheatId)) return cheatVoiceLoads.get(cheatId);
+        const entry = CHEAT_VOICE_FILES[cheatId];
+        const context = ensureAudio();
+        if (!entry || !context) return Promise.reject(new Error("Voice audio is unavailable."));
+
+        const load = fetch(entry.src)
+          .then((response) => {
+            if (!response.ok) throw new Error(`Voice request failed with status ${response.status}.`);
+            return response.arrayBuffer();
+          })
+          .then((bytes) => context.decodeAudioData(bytes))
+          .then((buffer) => {
+            cheatVoiceBuffers.set(cheatId, buffer);
+            cheatVoiceLoads.delete(cheatId);
+            return buffer;
+          })
+          .catch((error) => {
+            cheatVoiceLoads.delete(cheatId);
+            throw error;
+          });
+        cheatVoiceLoads.set(cheatId, load);
+        return load;
+      }
+
       function stopCheatVoice() {
-        const voice = activeCheatVoice;
-        activeCheatVoice = null;
+        voiceRequestToken += 1;
+        const source = activeVoiceSource;
+        const gain = activeVoiceGain;
+        activeVoiceSource = null;
+        activeVoiceGain = null;
         activeVoiceCheatId = null;
+        activeVoiceStartedAt = 0;
         voiceDucking = false;
-        if (!voice) return;
-        voice.onended = null;
-        voice.onerror = null;
-        voice.pause();
-        try { voice.currentTime = 0; } catch (error) { /* Metadata may not be ready yet. */ }
+        if (source) {
+          source.onended = null;
+          try { source.stop(); } catch (error) { /* It may have already ended naturally. */ }
+          source.disconnect();
+        }
+        gain?.disconnect();
       }
 
       function playCheatVoice(cheatId) {
         const entry = CHEAT_VOICE_FILES[cheatId];
-        const voice = cheatVoicePlayers.get(cheatId);
-        if (!state.soundEnabled || !entry || !voice) return CHEAT_PACE.warning;
+        if (!state.soundEnabled || !entry) return CHEAT_PACE.warning;
 
         stopCheatVoice();
-        activeCheatVoice = voice;
-        activeVoiceCheatId = cheatId;
-        voiceDucking = true;
-        voice.volume = 0.94;
-        try { voice.currentTime = 0; } catch (error) { /* The first play starts at zero anyway. */ }
-
-        const releaseDuck = () => {
-          if (activeCheatVoice !== voice) return;
-          activeCheatVoice = null;
-          activeVoiceCheatId = null;
-          voiceDucking = false;
-        };
-        voice.onended = releaseDuck;
-        voice.onerror = releaseDuck;
-        const playback = voice.play();
-        if (playback?.catch) playback.catch(releaseDuck);
+        const requestToken = voiceRequestToken;
+        loadCheatVoice(cheatId)
+          .then((buffer) => {
+            if (requestToken !== voiceRequestToken || !state.soundEnabled) return;
+            const context = ensureAudio();
+            if (!context) return;
+            const source = context.createBufferSource();
+            const gain = context.createGain();
+            source.buffer = buffer;
+            gain.gain.value = dbToGain(-0.5);
+            source.connect(gain).connect(context.destination);
+            activeVoiceSource = source;
+            activeVoiceGain = gain;
+            activeVoiceCheatId = cheatId;
+            activeVoiceStartedAt = context.currentTime;
+            voiceDucking = true;
+            source.onended = () => {
+              if (activeVoiceSource !== source) return;
+              activeVoiceSource = null;
+              activeVoiceGain = null;
+              activeVoiceCheatId = null;
+              activeVoiceStartedAt = 0;
+              voiceDucking = false;
+              source.disconnect();
+              gain.disconnect();
+            };
+            source.start();
+          })
+          .catch((error) => {
+            if (requestToken !== voiceRequestToken) return;
+            activeVoiceCheatId = null;
+            voiceDucking = false;
+            state.voiceCheatsUntilCallout = 1;
+            console.warn("Chaos Bot voice will retry on the next cheat.", error);
+          });
 
         return Math.min(2700, Math.max(1800, Math.round(entry.duration * 400)));
       }
@@ -2544,6 +2594,15 @@
         impactFeedback(pick([27, 28, 35, 36]), "medium", CHEAT_WORDS[cheatId] || "CHEAT!", "#fff254");
       }
 
+      function shouldPlayVoiceCallout() {
+        if (!state.soundEnabled) return false;
+        state.voiceCheatsUntilCallout -= 1;
+        if (state.voiceCheatsUntilCallout > 0) return false;
+        state.voiceCheatsUntilCallout = 3;
+        state.voiceCalloutCount += 1;
+        return true;
+      }
+
       function startAiTurn() {
         if (state.phase !== "ai") return;
         state.aiTurns += 1;
@@ -2555,7 +2614,7 @@
         if (shouldCheat) {
           const cheatId = drawCheat();
           const afterCheat = () => state.comboPending ? runComboAftershock(performAiMove) : performAiMove();
-          stageCheat(cheatId, afterCheat);
+          stageCheat(cheatId, afterCheat, shouldPlayVoiceCallout());
         } else {
           setStoryStep(2, "Ordinary AI move", "No special cheat this turn. Watch one black checker make a normal move.");
           setStatus("Chaos Bot is making one ordinary move. Probably.", "ai");
@@ -3328,6 +3387,8 @@
         state.comboPending = false;
         state.comboCount = 0;
         state.survivalStamps = 0;
+        state.voiceCheatsUntilCallout = 1;
+        state.voiceCalloutCount = 0;
         state.reportCount = 0;
         bannerToken += 1;
         clearFx();
@@ -3419,10 +3480,13 @@
             storyText: dom.storyText.textContent,
             activeStoryStep: dom.storySteps.findIndex((step) => step.classList.contains("active")) + 1,
             highlightedChanges: dom.squares.filter((square) => square.classList.contains("recent-change")).map((square) => Number(square.dataset.index)),
-            voicePackSize: cheatVoicePlayers.size,
+            voicePackSize: Object.keys(CHEAT_VOICE_FILES).length,
             activeVoiceCheatId,
             voiceDucking,
-            activeVoiceTime: activeCheatVoice ? activeCheatVoice.currentTime : 0,
+            activeVoiceTime: audioContext && activeVoiceSource ? audioContext.currentTime - activeVoiceStartedAt : 0,
+            voiceBuffersReady: cheatVoiceBuffers.size,
+            voiceCheatsUntilCallout: state.voiceCheatsUntilCallout,
+            voiceCalloutCount: state.voiceCalloutCount,
             board: state.board.map((piece) => {
               if (!piece) return null;
               if (piece.type === "donut") return "donut";
@@ -3445,7 +3509,7 @@
               renderBoard();
             });
           },
-          triggerStagedCheat: (cheatId) => {
+          triggerStagedCheat: (cheatId, withVoice = true) => {
             if (!CHEAT_NAMES[cheatId]) throw new Error(`Unknown cheat: ${cheatId}`);
             resetGame();
             state.phase = "ai";
@@ -3459,7 +3523,7 @@
               if (state.phase === "over") return;
               state.phase = "player";
               renderBoard();
-            });
+            }, withVoice);
           },
           triggerAiMove: () => {
             resetGame();
@@ -3473,6 +3537,12 @@
             return playCheatVoice(cheatId);
           },
           stopVoiceForTest: stopCheatVoice,
+          voiceCadenceSequenceForTest: (count = 10) => {
+            state.soundEnabled = true;
+            state.voiceCheatsUntilCallout = 1;
+            state.voiceCalloutCount = 0;
+            return Array.from({ length: count }, () => shouldPlayVoiceCallout());
+          },
           triggerCombo: () => {
             resetGame();
             state.phase = "ai";

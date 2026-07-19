@@ -2,7 +2,7 @@
 
 Two tiny browser games where the computer cheats and insists everything is normal.
 
-Absurd Unfair Checkers includes a 25-line ElevenLabs Chaos Bot voice pack that calls River out by name for every cheat. Generated-asset provenance and scripts are recorded in `assets/audio/chaos-bot-vo/voice-lines.json`.
+Absurd Unfair Checkers includes a 25-line ElevenLabs Chaos Bot voice pack that calls River out by name. Callouts use a persistent Web Audio voice channel on roughly every third cheat, so they stay funny without talking over every turn. Generated-asset provenance and scripts are recorded in `assets/audio/chaos-bot-vo/voice-lines.json`.
 
 ## Play
 
