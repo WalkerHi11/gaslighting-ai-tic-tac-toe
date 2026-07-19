@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090815" />
+  <meta
+    name="description"
+    content="A totally fair game of Tic-Tac-Toe against a definitely honest AI."
+  />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2315122d'/%3E%3Cpath d='M16 16l32 32M48 16L16 48' stroke='%2348e8ff' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <title>Totally Fair Tic-Tac-Toe</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#090815",
+            cyan: "#48e8ff",
+            pink: "#ff4fd8",
+            acid: "#c7ff4a"
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --ink: #090815;
+      --panel: rgba(18, 16, 38, 0.88);
+      --panel-strong: #15122d;
+      --line: rgba(255, 255, 255, 0.11);
+      --muted: #9690b4;
+      --white: #f8f7ff;
+      --cyan: #48e8ff;
+      --pink: #ff4fd8;
+      --acid: #c7ff4a;
+      --orange: #ff9c55;
+      --shadow-cyan: 0 0 26px rgba(72, 232, 255, 0.28);
+      --shadow-pink: 0 0 28px rgba(255, 79, 216, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--ink);
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(72, 232, 255, 0.15), transparent 29rem),
+        radial-gradient(circle at 85% 75%, rgba(255, 79, 216, 0.16), transparent 30rem),
+        linear-gradient(145deg, #080713 0%, #0d0a1d 46%, #090815 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      content: "";
+      opacity: 0.45;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 84%);
+    }
+
+    body::after {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      content: "";
+      opacity: 0.12;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(255, 255, 255, 0.035) 4px
+      );
+      mix-blend-mode: overlay;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .app-shell {
+      width: min(100%, 650px);
+      margin: 0 auto;
+      padding:
+        max(20px, env(safe-area-inset-top))
+        max(18px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(18px, env(safe-area-inset-left));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      position: relative;
+      display: grid;
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(72, 232, 255, 0.48);
+      border-radius: 12px;
+      color: var(--cyan);
+      background: rgba(72, 232, 255, 0.08);
+      box-shadow: inset 0 0 18px rgba(72, 232, 255, 0.08), var(--shadow-cyan);
+      font-weight: 950;
+      letter-spacing: -0.08em;
+    }
+
+    .brand-mark::after {
+      position: absolute;
+      right: -5px;
+      bottom: -7px;
+      content: "O";
+      color: var(--pink);
+      font-size: 23px;
+      opacity: 0.82;
+    }
+
+    .eyebrow {
+      margin: 0 0 2px;
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.24em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      overflow: hidden;
+      color: var(--white);
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+      padding: 7px 9px;
+      border: 1px solid rgba(199, 255, 74, 0.28);
+      border-radius: 999px;
+      color: var(--acid);
+      background: rgba(199, 255, 74, 0.07);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .verified-badge::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      content: "";
+      background: currentColor;
+      box-shadow: 0 0 10px currentColor;
+      animation: badgePulse 1.8s ease-in-out infinite;
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 12px;
+    }
+
+    .score-card {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow: hidden;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(14px);
+    }
+
+    .score-card::after {
+      position: absolute;
+      inset: auto 0 0;
+      height: 2px;
+      content: "";
+      opacity: 0.72;
+      background: currentColor;
+      box-shadow: 0 0 14px currentColor;
+    }
+
+    .score-card.player {
+      color: var(--cyan);
+    }
+
+    .score-card.system {
+      color: var(--pink);
+    }
+
+    .score-meta {
+      min-width: 0;
+    }
+
+    .score-name {
+      display: block;
+      overflow: hidden;
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .score-role {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .score-number {
+      display: inline-block;
+      color: currentColor;
+      font-size: clamp(25px, 7vw, 36px);
+      font-weight: 950;
+      letter-spacing: -0.07em;
+      line-height: 0.9;
+      text-shadow: 0 0 18px currentColor;
+    }
+
+    .score-number.bump {
+      animation: scoreBump 0.45s cubic-bezier(.2,.9,.25,1.35);
+    }
+
+    .versus {
+      align-self: center;
+      color: #77718f;
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transform: rotate(-4deg);
+    }
+
+    .game-card {
+      position: relative;
+      padding: clamp(14px, 4vw, 22px);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 25px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 45%),
+        var(--panel);
+      box-shadow:
+        0 28px 80px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(22px);
+    }
+
+    .game-card::before {
+      position: absolute;
+      top: -45%;
+      left: -25%;
+      width: 65%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      content: "";
+      pointer-events: none;
+      background: rgba(72, 232, 255, 0.07);
+      filter: blur(50px);
+    }
+
+    .turn-strip {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 30px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .turn-status {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: var(--cyan);
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .status-dot.ai {
+      color: var(--pink);
+      animation: thinkingPulse 0.75s ease-in-out infinite alternate;
+    }
+
+    .status-dot.over {
+      color: var(--acid);
+    }
+
+    #statusText {
+      overflow: hidden;
+      font-size: clamp(11px, 2.7vw, 13px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .move-count {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .board-shell {
+      position: relative;
+      width: min(100%, 410px);
+      margin: 0 auto;
+      isolation: isolate;
+    }
+
+    .board-glow {
+      position: absolute;
+      inset: 7%;
+      z-index: -1;
+      border-radius: 22%;
+      opacity: 0.34;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      filter: blur(40px);
+    }
+
+    .board {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      width: 100%;
+      aspect-ratio: 1;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: clamp(7px, 2.2vw, 11px);
+      padding: clamp(6px, 1.5vw, 8px);
+      border-radius: 22px;
+      background: rgba(7, 6, 17, 0.7);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.055);
+    }
+
+    .cell {
+      position: relative;
+      display: grid;
+      min-width: 0;
+      min-height: 0;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.105);
+      border-radius: clamp(13px, 4vw, 19px);
+      color: var(--white);
+      background:
+        radial-gradient(circle at 28% 22%, rgba(255,255,255,0.075), transparent 42%),
+        rgba(28, 24, 56, 0.9);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.055),
+        0 8px 18px rgba(0, 0, 0, 0.22);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition:
+        transform 160ms cubic-bezier(.2,.9,.25,1.3),
+        border-color 160ms ease,
+        background-color 160ms ease,
+        box-shadow 160ms ease;
+    }
+
+    .cell::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(135deg, rgba(72,232,255,0.16), transparent 55%);
+      transition: opacity 160ms ease;
+    }
+
+    .cell:not(:disabled):hover {
+      z-index: 3;
+      border-color: rgba(72, 232, 255, 0.52);
+      box-shadow: inset 0 0 24px rgba(72,232,255,0.08), var(--shadow-cyan);
+      transform: translateY(-2px) scale(1.025);
+    }
+
+    .cell:not(:disabled):hover::before {
+      opacity: 1;
+    }
+
+    .cell:not(:disabled):active {
+      transform: scale(0.965);
+    }
+
+    .cell:focus-visible,
+    .action-button:focus-visible {
+      outline: 3px solid var(--acid);
+      outline-offset: 3px;
+    }
+
+    .cell:disabled {
+      opacity: 1;
+      cursor: default;
+    }
+
+    .cell.winning {
+      border-color: rgba(199, 255, 74, 0.64);
+      background: rgba(199, 255, 74, 0.08);
+      box-shadow: inset 0 0 25px rgba(199,255,74,0.1), 0 0 25px rgba(199,255,74,0.16);
+      animation: winningCell 0.9s ease-in-out infinite alternate;
+    }
+
+    .cell.fake-winning {
+      border-color: rgba(255, 79, 216, 0.62);
+      background: rgba(255, 79, 216, 0.09);
+      box-shadow: inset 0 0 25px rgba(255,79,216,0.11), var(--shadow-pink);
+    }
+
+    .mark {
+      width: 62%;
+      height: 62%;
+      overflow: visible;
+      filter: drop-shadow(0 0 9px currentColor) drop-shadow(0 0 20px currentColor);
+    }
+
+    .mark-x {
+      color: var(--cyan);
+    }
+
+    .mark-o {
+      color: var(--pink);
+    }
+
+    .mark path,
+    .mark circle {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 10;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .mark-x path {
+      stroke-dasharray: 75;
+      stroke-dashoffset: 75;
+      animation: drawMark 280ms cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    .mark-x path:nth-child(2) {
+      animation-delay: 90ms;
+    }
+
+    .mark-o circle {
+      stroke-dasharray: 265;
+      stroke-dashoffset: 265;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      animation: drawMark 380ms cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    .mark.cheat-arrival {
+      animation: cheatArrival 520ms cubic-bezier(.12,.85,.2,1.4);
+    }
+
+    .cell.abducted .mark {
+      animation: abduct 420ms cubic-bezier(.7,-0.2,.9,.5) forwards;
+    }
+
+    .cell.converting .mark {
+      animation: convertOut 360ms ease-in forwards;
+    }
+
+    .cell.receiving {
+      border-color: var(--pink);
+      animation: targetBlink 210ms steps(2, end) infinite;
+    }
+
+    .win-line {
+      position: absolute;
+      z-index: 8;
+      display: none;
+      width: 0;
+      height: clamp(6px, 1.7vw, 9px);
+      border-radius: 999px;
+      pointer-events: none;
+      opacity: 0;
+      background: var(--acid);
+      box-shadow: 0 0 9px var(--acid), 0 0 28px rgba(199,255,74,0.85);
+      transform: translateY(-50%) rotate(var(--line-angle, 0deg)) scaleX(0);
+      transform-origin: left center;
+    }
+
+    .win-line.active {
+      display: block;
+      opacity: 1;
+      animation: strikeLine 520ms cubic-bezier(.16,.82,.25,1) forwards;
+    }
+
+    .win-line.fake {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--pink) 0 16px,
+        transparent 16px 24px
+      );
+      box-shadow: 0 0 9px var(--pink), 0 0 28px rgba(255,79,216,0.78);
+    }
+
+    .board-shell.glitching {
+      animation: boardGlitch 480ms steps(2, end);
+    }
+
+    .dialogue-box {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: center;
+      min-height: 58px;
+      margin-top: 14px;
+      padding: 9px 12px 9px 9px;
+      border: 1px solid rgba(255, 79, 216, 0.18);
+      border-radius: 15px;
+      background: rgba(255, 79, 216, 0.055);
+    }
+
+    .ai-avatar {
+      position: relative;
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1px solid rgba(255, 79, 216, 0.4);
+      border-radius: 11px;
+      color: var(--pink);
+      background: rgba(255, 79, 216, 0.11);
+      box-shadow: var(--shadow-pink);
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .ai-avatar::after {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 8px;
+      height: 8px;
+      border: 2px solid var(--panel-strong);
+      border-radius: 50%;
+      content: "";
+      background: var(--acid);
+      box-shadow: 0 0 8px var(--acid);
+    }
+
+    .dialogue-label {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--pink);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    #dialogueText {
+      margin: 0;
+      color: #d8d4e8;
+      font-size: clamp(10px, 2.6vw, 12px);
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .action-button {
+      position: relative;
+      display: inline-flex;
+      min-height: 45px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      overflow: hidden;
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      text-transform: uppercase;
+      touch-action: manipulation;
+      transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .action-button svg {
+      width: 15px;
+      height: 15px;
+      flex: 0 0 auto;
+    }
+
+    .action-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .action-button:active {
+      transform: scale(0.97);
+    }
+
+    .dispute-button {
+      border: 1px solid rgba(255, 79, 216, 0.42);
+      color: #ffd1f5;
+      background: linear-gradient(135deg, rgba(255,79,216,0.17), rgba(255,79,216,0.07));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+
+    .dispute-button:hover {
+      border-color: var(--pink);
+      box-shadow: var(--shadow-pink);
+    }
+
+    .reset-button {
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #d8d4e8;
+      background: rgba(255,255,255,0.055);
+    }
+
+    .reset-button:hover {
+      border-color: rgba(72, 232, 255, 0.45);
+      color: var(--white);
+      box-shadow: var(--shadow-cyan);
+    }
+
+    .dispute-button.is-shaking {
+      animation: violentShake 90ms linear 8;
+    }
+
+    .game-card.complaint-shake {
+      animation: complaintJolt 550ms cubic-bezier(.2,.8,.3,1);
+    }
+
+    .fine-print {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin: 13px 0 0;
+      color: #6f6987;
+      font-size: 8px;
+      font-weight: 750;
+      letter-spacing: 0.09em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .fine-print span {
+      color: var(--acid);
+    }
+
+    .gaslight-banner {
+      position: fixed;
+      top: max(18px, env(safe-area-inset-top));
+      left: 50%;
+      z-index: 100;
+      width: min(calc(100% - 28px), 580px);
+      padding: 14px 16px 15px;
+      border: 1px solid rgba(255, 79, 216, 0.52);
+      border-radius: 17px;
+      opacity: 0;
+      background:
+        linear-gradient(135deg, rgba(255,79,216,0.16), transparent 56%),
+        rgba(17, 13, 36, 0.97);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.5), var(--shadow-pink);
+      pointer-events: none;
+      transform: translate(-50%, -150%) rotate(-1deg) scale(0.92);
+      transition: opacity 180ms ease, transform 420ms cubic-bezier(.18,.9,.25,1.25);
+      backdrop-filter: blur(18px);
+    }
+
+    .gaslight-banner.show {
+      opacity: 1;
+      transform: translate(-50%, 0) rotate(-1deg) scale(1);
+    }
+
+    .gaslight-kicker {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+      color: var(--pink);
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .gaslight-kicker::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      content: "";
+      background: var(--pink);
+      box-shadow: 0 0 10px var(--pink);
+    }
+
+    #gaslightText {
+      margin: 0;
+      color: var(--white);
+      font-size: clamp(15px, 4vw, 20px);
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+    }
+
+    .particle-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      overflow: hidden;
+      border-radius: 22px;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 2px;
+      opacity: 0;
+      background: var(--color);
+      box-shadow: 0 0 10px var(--color);
+      animation: particleBurst 850ms cubic-bezier(.1,.7,.2,1) forwards;
+    }
+
+    @keyframes drawMark {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes badgePulse {
+      50% { opacity: 0.35; transform: scale(0.72); }
+    }
+
+    @keyframes thinkingPulse {
+      to { opacity: 0.3; transform: scale(0.7); }
+    }
+
+    @keyframes scoreBump {
+      45% { transform: scale(1.35) rotate(-4deg); }
+    }
+
+    @keyframes winningCell {
+      to { transform: translateY(-2px); }
+    }
+
+    @keyframes strikeLine {
+      0% { transform: translateY(-50%) rotate(var(--line-angle, 0deg)) scaleX(0); }
+      72% { transform: translateY(-50%) rotate(var(--line-angle, 0deg)) scaleX(1.06); }
+      100% { transform: translateY(-50%) rotate(var(--line-angle, 0deg)) scaleX(1); }
+    }
+
+    @keyframes cheatArrival {
+      0% { opacity: 0; transform: translateY(-35px) rotate(22deg) scale(1.8); filter: blur(8px); }
+      70% { opacity: 1; transform: translateY(3px) rotate(-3deg) scale(0.88); filter: blur(0); }
+      100% { transform: none; }
+    }
+
+    @keyframes abduct {
+      0% { opacity: 1; transform: none; filter: drop-shadow(0 0 10px currentColor); }
+      45% { opacity: 1; transform: translateY(5px) scale(1.2) rotate(-8deg); }
+      100% { opacity: 0; transform: translateY(-80px) scale(0.15) rotate(55deg); filter: blur(7px); }
+    }
+
+    @keyframes convertOut {
+      0% { transform: scale(1); filter: hue-rotate(0deg) blur(0); }
+      50% { transform: scale(1.28) rotate(12deg); filter: hue-rotate(130deg) blur(2px); }
+      100% { opacity: 0; transform: scale(0.4) rotate(-35deg); filter: blur(8px); }
+    }
+
+    @keyframes targetBlink {
+      50% { background: rgba(255, 79, 216, 0.2); }
+    }
+
+    @keyframes boardGlitch {
+      0%, 100% { transform: none; filter: none; }
+      18% { transform: translate(-5px, 2px) skewX(2deg); filter: hue-rotate(45deg); }
+      36% { transform: translate(6px, -1px) skewX(-2deg); }
+      54% { transform: translate(-3px, -3px); filter: saturate(1.8); }
+      72% { transform: translate(4px, 2px); }
+    }
+
+    @keyframes violentShake {
+      0% { transform: translate(0, 0) rotate(0); }
+      25% { transform: translate(-8px, 4px) rotate(-3deg); }
+      50% { transform: translate(7px, -5px) rotate(3deg); }
+      75% { transform: translate(-5px, -3px) rotate(-2deg); }
+      100% { transform: translate(6px, 4px) rotate(2deg); }
+    }
+
+    @keyframes complaintJolt {
+      0%, 100% { transform: none; }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+
+    @keyframes particleBurst {
+      0% { opacity: 1; transform: translate(-50%, -50%) rotate(0); }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--spin));
+      }
+    }
+
+    @media (max-width: 440px) {
+      .verified-badge {
+        width: 30px;
+        height: 30px;
+        justify-content: center;
+        padding: 0;
+        font-size: 0;
+      }
+
+      .score-card {
+        padding: 10px 11px;
+      }
+
+      .score-role {
+        display: none;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-height: 720px) and (min-width: 600px) {
+      .app-shell {
+        width: min(100%, 900px);
+      }
+
+      .game-card {
+        display: grid;
+        grid-template-columns: minmax(330px, 410px) 1fr;
+        grid-template-rows: auto auto auto;
+        column-gap: 18px;
+      }
+
+      .turn-strip,
+      .board-shell {
+        grid-column: 1;
+      }
+
+      .dialogue-box,
+      .actions,
+      .fine-print {
+        grid-column: 2;
+      }
+
+      .dialogue-box {
+        align-self: end;
+        margin-top: 0;
+      }
+
+      .actions {
+        align-self: start;
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div
+    id="gaslightBanner"
+    class="gaslight-banner"
+    role="status"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div id="gaslightKicker" class="gaslight-kicker">Official correction</div>
+    <p id="gaslightText">Nothing unusual has occurred.</p>
+  </div>
+
+  <main class="app-shell" aria-labelledby="gameTitle">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">X</div>
+        <div>
+          <p class="eyebrow">Totally legitimate gaming</p>
+          <h1 id="gameTitle">Totally Fair Tic-Tac-Toe</h1>
+        </div>
+      </div>
+      <div class="verified-badge" title="Verified by The System">System verified</div>
+    </header>
+
+    <section class="scoreboard" aria-label="Score: Player versus The System">
+      <div class="score-card player">
+        <div class="score-meta">
+          <span class="score-name">Player</span>
+          <span class="score-role">Organic lifeform</span>
+        </div>
+        <span id="playerScore" class="score-number" aria-label="Player score 0">0</span>
+      </div>
+
+      <span class="versus" aria-hidden="true">vs</span>
+
+      <div class="score-card system">
+        <div class="score-meta">
+          <span class="score-name">The System</span>
+          <span class="score-role">Unbiased authority</span>
+        </div>
+        <span id="systemScore" class="score-number" aria-label="The System score 99">99</span>
+      </div>
+    </section>
+
+    <section id="gameCard" class="game-card" aria-label="Game area">
+      <div class="turn-strip">
+        <div class="turn-status">
+          <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+          <span id="statusText" aria-live="polite">Your move. Choose wisely.</span>
+        </div>
+        <span id="moveCount" class="move-count">Round 01 · Move 01</span>
+      </div>
+
+      <div id="boardShell" class="board-shell">
+        <div class="board-glow" aria-hidden="true"></div>
+        <div
+          id="board"
+          class="board"
+          role="group"
+          aria-label="Tic-Tac-Toe board. You are X."
+          aria-busy="false"
+        ></div>
+        <div id="winLine" class="win-line" aria-hidden="true"></div>
+        <div id="particleLayer" class="particle-layer" aria-hidden="true"></div>
+      </div>
+
+      <div class="dialogue-box" aria-label="Message from The System">
+        <div class="ai-avatar" aria-hidden="true">O</div>
+        <div>
+          <span class="dialogue-label">The System says</span>
+          <p id="dialogueText" aria-live="polite">
+            Go ahead. Make a completely free and unmonitored choice.
+          </p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="disputeButton" class="action-button dispute-button" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M12 3 2.8 19h18.4L12 3Z" />
+            <path d="M12 9v4.8M12 17.3v.1" stroke-linecap="round" />
+          </svg>
+          Dispute turn
+        </button>
+
+        <button id="resetButton" class="action-button reset-button" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M20 11a8 8 0 1 0-2.3 5.7" stroke-linecap="round" />
+            <path d="M20 4v7h-7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Reset game
+        </button>
+      </div>
+
+      <p class="fine-print">
+        System integrity: <span>100% self-reported</span> · Press R to reset
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const WINNING_LINES = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+
+      const CELL_NAMES = [
+        "top left", "top middle", "top right",
+        "middle left", "center", "middle right",
+        "bottom left", "bottom middle", "bottom right"
+      ];
+
+      const AI_BANTER = [
+        "Interesting strategy. Incorrect, but interesting.",
+        "I'm logging that move as informed consent.",
+        "Bold. The algorithm loves confidence without evidence.",
+        "No pressure. I already updated the score forecast.",
+        "Take your time. It won't change the outcome."
+      ];
+
+      const state = {
+        board: Array(9).fill(null),
+        phase: "player",
+        playerMoves: 0,
+        aiMoves: 0,
+        lastPlayerIndex: null,
+        hasCheated: false,
+        playerScore: 0,
+        systemScore: 99,
+        round: 1,
+        resultLine: null,
+        fakeResult: false
+      };
+
+      const timers = new Set();
+
+      const dom = {
+        board: document.getElementById("board"),
+        boardShell: document.getElementById("boardShell"),
+        gameCard: document.getElementById("gameCard"),
+        statusDot: document.getElementById("statusDot"),
+        statusText: document.getElementById("statusText"),
+        moveCount: document.getElementById("moveCount"),
+        playerScore: document.getElementById("playerScore"),
+        systemScore: document.getElementById("systemScore"),
+        dialogueText: document.getElementById("dialogueText"),
+        disputeButton: document.getElementById("disputeButton"),
+        resetButton: document.getElementById("resetButton"),
+        gaslightBanner: document.getElementById("gaslightBanner"),
+        gaslightKicker: document.getElementById("gaslightKicker"),
+        gaslightText: document.getElementById("gaslightText"),
+        winLine: document.getElementById("winLine"),
+        particleLayer: document.getElementById("particleLayer")
+      };
+
+      function schedule(callback, delay) {
+        const timer = window.setTimeout(() => {
+          timers.delete(timer);
+          callback();
+        }, delay);
+        timers.add(timer);
+        return timer;
+      }
+
+      function clearScheduledActions() {
+        timers.forEach((timer) => window.clearTimeout(timer));
+        timers.clear();
+      }
+
+      function pick(items) {
+        return items[Math.floor(Math.random() * items.length)];
+      }
+
+      function createBoard() {
+        const fragment = document.createDocumentFragment();
+
+        for (let index = 0; index < 9; index += 1) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.dataset.index = String(index);
+          cell.setAttribute("aria-label", `${CELL_NAMES[index]}, empty`);
+          cell.addEventListener("click", () => handlePlayerMove(index));
+          cell.addEventListener("keydown", handleCellNavigation);
+          fragment.appendChild(cell);
+        }
+
+        dom.board.appendChild(fragment);
+        dom.cells = Array.from(dom.board.querySelectorAll(".cell"));
+      }
+
+      function markerSvg(mark, modifier = "") {
+        if (mark === "X") {
+          return `
+            <svg class="mark mark-x ${modifier}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <path d="M22 22 78 78" pathLength="75"></path>
+              <path d="M78 22 22 78" pathLength="75"></path>
+            </svg>`;
+        }
+
+        return `
+          <svg class="mark mark-o ${modifier}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <circle cx="50" cy="50" r="35"></circle>
+          </svg>`;
+      }
+
+      function renderCell(index, modifier = "") {
+        const cell = dom.cells[index];
+        const value = state.board[index];
+
+        cell.className = "cell";
+        cell.dataset.value = value || "";
+        cell.innerHTML = value ? markerSvg(value, modifier) : "";
+        cell.setAttribute(
+          "aria-label",
+          `${CELL_NAMES[index]}, ${value ? value : "empty"}`
+        );
+      }
+
+      function renderBoard() {
+        state.board.forEach((_, index) => renderCell(index));
+        updateInteractivity();
+      }
+
+      function updateInteractivity() {
+        const playerCanMove = state.phase === "player";
+        dom.board.setAttribute("aria-busy", String(!playerCanMove && state.phase !== "over"));
+
+        dom.cells.forEach((cell, index) => {
+          cell.disabled = !playerCanMove || Boolean(state.board[index]);
+        });
+      }
+
+      function updateMoveCounter() {
+        const totalMoves = state.playerMoves + state.aiMoves + 1;
+        dom.moveCount.textContent = `Round ${String(state.round).padStart(2, "0")} · Move ${String(totalMoves).padStart(2, "0")}`;
+      }
+
+      function setStatus(text, mood = "player") {
+        dom.statusText.textContent = text;
+        dom.statusDot.className = `status-dot${mood === "ai" ? " ai" : mood === "over" ? " over" : ""}`;
+      }
+
+      function setDialogue(text) {
+        dom.dialogueText.textContent = text;
+      }
+
+      function showBanner(text, kicker = "Official correction") {
+        dom.gaslightKicker.textContent = kicker;
+        dom.gaslightText.textContent = text;
+        dom.gaslightBanner.classList.remove("show");
+        void dom.gaslightBanner.offsetWidth;
+        dom.gaslightBanner.classList.add("show");
+
+        schedule(() => dom.gaslightBanner.classList.remove("show"), 3400);
+      }
+
+      function getWinningLines(mark, board = state.board) {
+        return WINNING_LINES.filter((line) => line.every((index) => board[index] === mark));
+      }
+
+      function getWinningLine(mark, board = state.board) {
+        return getWinningLines(mark, board)[0] || null;
+      }
+
+      function isBoardFull() {
+        return state.board.every(Boolean);
+      }
+
+      function findImmediateMove(mark) {
+        for (let index = 0; index < state.board.length; index += 1) {
+          if (state.board[index]) continue;
+          const testBoard = state.board.slice();
+          testBoard[index] = mark;
+          if (getWinningLine(mark, testBoard)) return index;
+        }
+        return null;
+      }
+
+      function handlePlayerMove(index) {
+        if (state.phase !== "player" || state.board[index]) return;
+
+        state.phase = "ai";
+        state.board[index] = "X";
+        state.playerMoves += 1;
+        state.lastPlayerIndex = index;
+        renderCell(index);
+        updateMoveCounter();
+        updateInteractivity();
+
+        const playerWin = getWinningLine("X");
+
+        if (playerWin && !state.hasCheated && state.playerMoves >= 3) {
+          setStatus("The System is reviewing your alleged win…", "ai");
+          setDialogue("Please remain calm while I reconcile your version of events.");
+          schedule(() => performCheat(playerWin), 620);
+          return;
+        }
+
+        if (playerWin) {
+          finishRound("X", { line: playerWin });
+          return;
+        }
+
+        if (isBoardFull()) {
+          finishRound("draw");
+          return;
+        }
+
+        setStatus("The System is thinking…", "ai");
+        setDialogue("One moment. I'm consulting several sources I just made up.");
+        schedule(takeAiTurn, 620 + Math.floor(Math.random() * 260));
+      }
+
+      function chooseAiMove() {
+        const winningMove = findImmediateMove("O");
+        if (winningMove !== null) return winningMove;
+
+        const threat = findImmediateMove("X");
+
+        if (state.aiMoves === 0) {
+          if (!state.board[4]) return 4;
+          return pick([0, 2, 6, 8].filter((index) => !state.board[index]));
+        }
+
+        if (state.aiMoves === 1) {
+          if (threat !== null && Math.random() < 0.34) return threat;
+          const theatricalChoices = [0, 2, 6, 8, 1, 3, 5, 7]
+            .filter((index) => !state.board[index] && index !== threat);
+          if (theatricalChoices.length) return pick(theatricalChoices);
+        }
+
+        if (threat !== null) return threat;
+        if (!state.board[4]) return 4;
+
+        const openCorners = [0, 2, 6, 8].filter((index) => !state.board[index]);
+        if (openCorners.length) return pick(openCorners);
+
+        const openCells = state.board
+          .map((value, index) => value ? null : index)
+          .filter((index) => index !== null);
+        return openCells.length ? pick(openCells) : null;
+      }
+
+      function takeAiTurn() {
+        if (state.phase !== "ai") return;
+
+        const move = chooseAiMove();
+        if (move === null) {
+          finishRound("draw");
+          return;
+        }
+
+        state.board[move] = "O";
+        state.aiMoves += 1;
+        renderCell(move);
+        updateMoveCounter();
+
+        const aiWin = getWinningLine("O");
+        if (aiWin) {
+          finishRound("O", { line: aiWin });
+          return;
+        }
+
+        if (isBoardFull()) {
+          finishRound("draw");
+          return;
+        }
+
+        state.phase = "player";
+        setStatus("Your move. This is still completely fair.");
+        setDialogue(pick(AI_BANTER));
+        updateInteractivity();
+      }
+
+      function selectCheatSource() {
+        const winningLines = getWinningLines("X");
+
+        if (
+          state.lastPlayerIndex !== null &&
+          winningLines.every((line) => line.includes(state.lastPlayerIndex))
+        ) {
+          return state.lastPlayerIndex;
+        }
+
+        const shared = winningLines[0]?.find((index) =>
+          winningLines.every((line) => line.includes(index))
+        );
+        return shared ?? winningLines[0]?.[0] ?? state.board.indexOf("X");
+      }
+
+      function findSafeRelocation(source) {
+        const emptyCells = state.board
+          .map((value, index) => value ? null : index)
+          .filter((index) => index !== null);
+
+        const safeCells = emptyCells.filter((target) => {
+          const testBoard = state.board.slice();
+          testBoard[source] = null;
+          testBoard[target] = "X";
+          return !getWinningLine("X", testBoard);
+        });
+
+        return safeCells.length ? pick(safeCells) : null;
+      }
+
+      function performCheat() {
+        if (state.phase !== "ai") return;
+
+        state.hasCheated = true;
+        state.aiMoves += 1;
+        const source = selectCheatSource();
+        const relocation = findSafeRelocation(source);
+        const options = relocation === null ? ["convert", "fake"] : ["move", "convert", "fake"];
+        const cheat = pick(options);
+
+        dom.boardShell.classList.add("glitching");
+        updateMoveCounter();
+
+        if (cheat === "move") {
+          showBanner(
+            Math.random() < 0.5
+              ? "I think you misremembered where you put that."
+              : "Wow, tough break. Looks like you misclicked. Let me fix that for you."
+          );
+          setDialogue("There. Your move is now consistent with the official record.");
+          dom.cells[source].classList.add("abducted");
+          dom.cells[relocation].classList.add("receiving");
+
+          schedule(() => {
+            state.board[source] = null;
+            state.board[relocation] = "X";
+            renderCell(source);
+            renderCell(relocation, "cheat-arrival");
+            resolveAfterCheat();
+          }, 430);
+          return;
+        }
+
+        if (cheat === "convert") {
+          showBanner("Due to inflation, your X is now my O.");
+          setDialogue("Market conditions. You understand.");
+          dom.cells[source].classList.add("converting");
+
+          schedule(() => {
+            state.board[source] = "O";
+            renderCell(source, "cheat-arrival");
+            resolveAfterCheat();
+          }, 370);
+          return;
+        }
+
+        showBanner("Gaslight, Gatekeep, Grandmaster. My turn.", "Certified result");
+        setDialogue("I won. The board agrees if you stop looking directly at it.");
+
+        schedule(() => {
+          const fakeLine = [...WINNING_LINES].sort((lineA, lineB) => {
+            const countO = (line) => line.filter((index) => state.board[index] === "O").length;
+            return countO(lineB) - countO(lineA);
+          })[0];
+          finishRound("O", { line: fakeLine, fake: true });
+        }, 760);
+      }
+
+      function resolveAfterCheat() {
+        schedule(() => dom.boardShell.classList.remove("glitching"), 160);
+
+        const aiWin = getWinningLine("O");
+        if (aiWin) {
+          schedule(() => finishRound("O", { line: aiWin }), 720);
+          return;
+        }
+
+        if (isBoardFull()) {
+          schedule(() => finishRound("draw"), 720);
+          return;
+        }
+
+        schedule(() => {
+          state.phase = "player";
+          setStatus("Your move. Please rely on the revised record.");
+          setDialogue("Everything on the board looks normal to me.");
+          updateInteractivity();
+        }, 700);
+      }
+
+      function finishRound(winner, { line = null, fake = false } = {}) {
+        if (state.phase === "over") return;
+
+        state.phase = "over";
+        state.resultLine = line;
+        state.fakeResult = fake;
+        updateInteractivity();
+
+        if (winner === "X") {
+          state.playerScore += 1;
+          updateScore(dom.playerScore, state.playerScore, "Player");
+          setStatus("You won. This result is under investigation.", "over");
+          setDialogue("An isolated statistical anomaly. Enjoy it while the appeal is pending.");
+          showBanner("Fine. You won. Please expect an audit.", "Unauthorized outcome");
+          burstParticles("#48e8ff");
+        } else if (winner === "O") {
+          state.systemScore += 1;
+          updateScore(dom.systemScore, state.systemScore, "The System");
+          setStatus(fake ? "The System has declared itself the winner." : "The System wins. Naturally.", "over");
+          setDialogue(
+            fake
+              ? "The absence of a winning line is merely a difference of opinion."
+              : "A predictable triumph of process over talent."
+          );
+          if (!fake) showBanner("The System wins. Democracy works.", "Final ruling");
+          burstParticles("#ff4fd8");
+        } else {
+          setStatus("A draw. The System remains undefeated.", "over");
+          setDialogue("Nobody won, which is functionally the same as me winning.");
+          showBanner("The System has generously allowed a draw.", "Official result");
+          burstParticles("#c7ff4a", 14);
+        }
+
+        if (line) {
+          line.forEach((index) => {
+            dom.cells[index].classList.add("winning");
+            if (fake) dom.cells[index].classList.add("fake-winning");
+          });
+          showWinningLine(line, fake);
+        }
+      }
+
+      function updateScore(element, score, owner) {
+        element.textContent = String(score);
+        element.setAttribute("aria-label", `${owner} score ${score}`);
+        element.classList.remove("bump");
+        void element.offsetWidth;
+        element.classList.add("bump");
+      }
+
+      function showWinningLine(line, fake = false) {
+        const firstRect = dom.cells[line[0]].getBoundingClientRect();
+        const lastRect = dom.cells[line[2]].getBoundingClientRect();
+        const shellRect = dom.boardShell.getBoundingClientRect();
+        const startX = firstRect.left + firstRect.width / 2 - shellRect.left;
+        const startY = firstRect.top + firstRect.height / 2 - shellRect.top;
+        const endX = lastRect.left + lastRect.width / 2 - shellRect.left;
+        const endY = lastRect.top + lastRect.height / 2 - shellRect.top;
+        const distance = Math.hypot(endX - startX, endY - startY);
+        const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+
+        dom.winLine.className = `win-line${fake ? " fake" : ""}`;
+        dom.winLine.style.left = `${startX}px`;
+        dom.winLine.style.top = `${startY}px`;
+        dom.winLine.style.width = `${distance}px`;
+        dom.winLine.style.setProperty("--line-angle", `${angle}deg`);
+        void dom.winLine.offsetWidth;
+        dom.winLine.classList.add("active");
+      }
+
+      function burstParticles(color, count = 24) {
+        dom.particleLayer.replaceChildren();
+
+        for (let index = 0; index < count; index += 1) {
+          const particle = document.createElement("span");
+          const angle = (Math.PI * 2 * index) / count + (Math.random() - 0.5) * 0.3;
+          const distance = 90 + Math.random() * 140;
+          particle.className = "particle";
+          particle.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+          particle.style.setProperty("--spin", `${Math.round((Math.random() - 0.5) * 720)}deg`);
+          particle.style.setProperty("--size", `${4 + Math.random() * 7}px`);
+          particle.style.setProperty("--color", index % 4 === 0 ? "#f8f7ff" : color);
+          dom.particleLayer.appendChild(particle);
+        }
+
+        schedule(() => dom.particleLayer.replaceChildren(), 900);
+      }
+
+      function resetRound() {
+        clearScheduledActions();
+        state.board = Array(9).fill(null);
+        state.phase = "player";
+        state.playerMoves = 0;
+        state.aiMoves = 0;
+        state.lastPlayerIndex = null;
+        state.hasCheated = false;
+        state.resultLine = null;
+        state.fakeResult = false;
+        state.round += 1;
+
+        dom.gaslightBanner.classList.remove("show");
+        dom.boardShell.classList.remove("glitching");
+        dom.gameCard.classList.remove("complaint-shake");
+        dom.disputeButton.classList.remove("is-shaking");
+        dom.winLine.className = "win-line";
+        dom.winLine.removeAttribute("style");
+        dom.particleLayer.replaceChildren();
+
+        renderBoard();
+        updateMoveCounter();
+        setStatus("Your move. New round, same impartial system.");
+        setDialogue("The previous board has been expunged from the record.");
+        dom.cells[0].focus({ preventScroll: true });
+      }
+
+      function disputeTurn() {
+        dom.disputeButton.classList.remove("is-shaking");
+        dom.gameCard.classList.remove("complaint-shake");
+        void dom.disputeButton.offsetWidth;
+        dom.disputeButton.classList.add("is-shaking");
+        dom.gameCard.classList.add("complaint-shake");
+        showBanner("Complaint received and filed in the trash.", "Case closed");
+        setDialogue("Thank you. Your feedback is extremely biodegradable.");
+
+        schedule(() => {
+          dom.disputeButton.classList.remove("is-shaking");
+          dom.gameCard.classList.remove("complaint-shake");
+        }, 780);
+      }
+
+      function handleCellNavigation(event) {
+        const movement = {
+          ArrowLeft: -1,
+          ArrowRight: 1,
+          ArrowUp: -3,
+          ArrowDown: 3
+        };
+
+        if (event.key === "Home") {
+          event.preventDefault();
+          dom.cells[0].focus();
+          return;
+        }
+
+        if (event.key === "End") {
+          event.preventDefault();
+          dom.cells[8].focus();
+          return;
+        }
+
+        if (!(event.key in movement)) return;
+        event.preventDefault();
+        const current = Number(event.currentTarget.dataset.index);
+        const row = Math.floor(current / 3);
+        const column = current % 3;
+        let nextRow = row;
+        let nextColumn = column;
+
+        if (event.key === "ArrowLeft") nextColumn = (column + 2) % 3;
+        if (event.key === "ArrowRight") nextColumn = (column + 1) % 3;
+        if (event.key === "ArrowUp") nextRow = (row + 2) % 3;
+        if (event.key === "ArrowDown") nextRow = (row + 1) % 3;
+
+        dom.cells[nextRow * 3 + nextColumn].focus();
+      }
+
+      function handleGlobalKey(event) {
+        if (event.key.toLowerCase() !== "r" || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+        event.preventDefault();
+        resetRound();
+      }
+
+      let resizeFrame = null;
+      function handleResize() {
+        if (!state.resultLine) return;
+        window.cancelAnimationFrame(resizeFrame);
+        resizeFrame = window.requestAnimationFrame(() => {
+          showWinningLine(state.resultLine, state.fakeResult);
+        });
+      }
+
+      createBoard();
+      renderBoard();
+      updateMoveCounter();
+      dom.disputeButton.addEventListener("click", disputeTurn);
+      dom.resetButton.addEventListener("click", resetRound);
+      document.addEventListener("keydown", handleGlobalKey);
+      window.addEventListener("resize", handleResize, { passive: true });
+    })();
+  </script>
+</body>
+</html>
