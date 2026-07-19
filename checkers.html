@@ -1505,6 +1505,34 @@
         doubleTrouble: "AGAIN!", moonGravity: "FLOAT!", replayReview: "NOPE!", boardTilt: "TILT!"
       };
       const CHEAT_PACE = { warning: 1300, result: 1750 };
+      const SFX_VOICE_DUCK_DB = -12;
+      const CHEAT_VOICE_FILES = {
+        taxMan: { src: "assets/audio/chaos-bot-vo/tax-man.mp3", duration: 5.962 },
+        bribe: { src: "assets/audio/chaos-bot-vo/bribe.mp3", duration: 5.015 },
+        magnets: { src: "assets/audio/chaos-bot-vo/magnets.mp3", duration: 6.543 },
+        kingInflation: { src: "assets/audio/chaos-bot-vo/king-inflation.mp3", duration: 7.309 },
+        pocketSand: { src: "assets/audio/chaos-bot-vo/pocket-sand.mp3", duration: 4.510 },
+        wind: { src: "assets/audio/chaos-bot-vo/wind.mp3", duration: 6.436 },
+        unoReverse: { src: "assets/audio/chaos-bot-vo/uno-reverse.mp3", duration: 5.535 },
+        pitfall: { src: "assets/audio/chaos-bot-vo/pitfall.mp3", duration: 4.512 },
+        distraction: { src: "assets/audio/chaos-bot-vo/distraction.mp3", duration: 6.160 },
+        outage: { src: "assets/audio/chaos-bot-vo/outage.mp3", duration: 5.993 },
+        infiniteJump: { src: "assets/audio/chaos-bot-vo/infinite-jump.mp3", duration: 5.600 },
+        construction: { src: "assets/audio/chaos-bot-vo/construction.mp3", duration: 6.241 },
+        clone: { src: "assets/audio/chaos-bot-vo/clone.mp3", duration: 5.586 },
+        donut: { src: "assets/audio/chaos-bot-vo/donut.mp3", duration: 5.929 },
+        teleport: { src: "assets/audio/chaos-bot-vo/teleport.mp3", duration: 4.644 },
+        bully: { src: "assets/audio/chaos-bot-vo/bully.mp3", duration: 5.888 },
+        tinyHorse: { src: "assets/audio/chaos-bot-vo/tiny-horse.mp3", duration: 5.665 },
+        shrinkRay: { src: "assets/audio/chaos-bot-vo/shrink-ray.mp3", duration: 5.007 },
+        timeOut: { src: "assets/audio/chaos-bot-vo/time-out.mp3", duration: 4.842 },
+        lavaFloor: { src: "assets/audio/chaos-bot-vo/lava-floor.mp3", duration: 6.402 },
+        exchange: { src: "assets/audio/chaos-bot-vo/exchange.mp3", duration: 4.860 },
+        doubleTrouble: { src: "assets/audio/chaos-bot-vo/double-trouble.mp3", duration: 6.231 },
+        moonGravity: { src: "assets/audio/chaos-bot-vo/moon-gravity.mp3", duration: 5.776 },
+        replayReview: { src: "assets/audio/chaos-bot-vo/replay-review.mp3", duration: 6.160 },
+        boardTilt: { src: "assets/audio/chaos-bot-vo/board-tilt.mp3", duration: 6.217 }
+      };
       const CHEAT_GUIDES = {
         taxMan: { warning: "The AI picked one of your red checkers for a fake rent inspection.", result: "One red checker was removed from the board." },
         bribe: { warning: "A fake-money offer is coming. Both answers let the AI steal pieces.", result: "Three of your red checkers were removed anyway." },
@@ -1566,10 +1594,19 @@
       const timers = new Set();
       let nextPieceId = 1;
       let audioContext = null;
+      let activeCheatVoice = null;
+      let activeVoiceCheatId = null;
+      let voiceDucking = false;
       let bribeContinuation = null;
       let dragState = null;
       let suppressClick = false;
       let bannerToken = 0;
+      const cheatVoicePlayers = new Map(Object.entries(CHEAT_VOICE_FILES).map(([cheatId, entry]) => {
+        const player = new Audio(entry.src);
+        player.preload = "auto";
+        player.playsInline = true;
+        return [cheatId, player];
+      }));
 
       const dom = {
         board: document.getElementById("board"),
@@ -1792,6 +1829,7 @@
         setStatus(`Cheat incoming: ${CHEAT_NAMES[cheatId]}. Read the warning, then watch the board.`, "ai");
         setBotDialogue("I am announcing the cheating first. That makes it educational.");
         shakeBoard("small");
+        const warningDelay = playCheatVoice(cheatId);
 
         schedule(() => {
           if (state.phase === "over") return;
@@ -1808,7 +1846,7 @@
               done();
             }, CHEAT_PACE.result);
           });
-        }, CHEAT_PACE.warning);
+        }, warningDelay);
       }
 
       function awardAiScore(forcedAmount = null) {
@@ -1835,6 +1873,48 @@
         return audioContext;
       }
 
+      function dbToGain(decibels) {
+        return Math.pow(10, decibels / 20);
+      }
+
+      function stopCheatVoice() {
+        const voice = activeCheatVoice;
+        activeCheatVoice = null;
+        activeVoiceCheatId = null;
+        voiceDucking = false;
+        if (!voice) return;
+        voice.onended = null;
+        voice.onerror = null;
+        voice.pause();
+        try { voice.currentTime = 0; } catch (error) { /* Metadata may not be ready yet. */ }
+      }
+
+      function playCheatVoice(cheatId) {
+        const entry = CHEAT_VOICE_FILES[cheatId];
+        const voice = cheatVoicePlayers.get(cheatId);
+        if (!state.soundEnabled || !entry || !voice) return CHEAT_PACE.warning;
+
+        stopCheatVoice();
+        activeCheatVoice = voice;
+        activeVoiceCheatId = cheatId;
+        voiceDucking = true;
+        voice.volume = 0.94;
+        try { voice.currentTime = 0; } catch (error) { /* The first play starts at zero anyway. */ }
+
+        const releaseDuck = () => {
+          if (activeCheatVoice !== voice) return;
+          activeCheatVoice = null;
+          activeVoiceCheatId = null;
+          voiceDucking = false;
+        };
+        voice.onended = releaseDuck;
+        voice.onerror = releaseDuck;
+        const playback = voice.play();
+        if (playback?.catch) playback.catch(releaseDuck);
+
+        return Math.min(2700, Math.max(1800, Math.round(entry.duration * 400)));
+      }
+
       function tone(startFrequency, endFrequency, duration, type = "sine", volume = 0.08, delay = 0) {
         const context = ensureAudio();
         if (!context) return;
@@ -1844,8 +1924,9 @@
         oscillator.type = type;
         oscillator.frequency.setValueAtTime(startFrequency, start);
         oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), start + duration);
+        const mixedVolume = volume * (voiceDucking ? dbToGain(SFX_VOICE_DUCK_DB) : 1);
         gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(mixedVolume, start + 0.015);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
         oscillator.connect(gain).connect(context.destination);
         oscillator.start(start);
@@ -2347,6 +2428,7 @@
 
       function beginDrag(event, index) {
         if (event.button !== 0 || state.phase !== "player") return;
+        ensureAudio();
         const piece = state.board[index];
         if (!isPiece(piece) || piece.color !== controlledColor()) return;
         const moves = getLegalMoves(controlledColor(), state.chainFrom).filter((move) => move.from === index);
@@ -3217,6 +3299,7 @@
 
       function resetGame() {
         clearTimers();
+        stopCheatVoice();
         dragState?.ghost?.remove();
         dragState = null;
         bribeContinuation = null;
@@ -3291,6 +3374,7 @@
           ? '<span aria-hidden="true">🔊</span><span>Sound on</span>'
           : '<span aria-hidden="true">🔇</span><span>Sound off</span>';
         if (state.soundEnabled) playBoing();
+        else stopCheatVoice();
       }
 
       createBoard();
@@ -3313,6 +3397,7 @@
       if (qaEnabled) {
         window.__CHAOS_CHECKERS_QA__ = {
           cheats: CHEATS.map(({ id, name }) => ({ id, name })),
+          voiceFiles: Object.fromEntries(Object.entries(CHEAT_VOICE_FILES).map(([id, entry]) => [id, entry.src])),
           snapshot: () => ({
             phase: state.phase,
             playerScore: state.playerScore,
@@ -3334,6 +3419,10 @@
             storyText: dom.storyText.textContent,
             activeStoryStep: dom.storySteps.findIndex((step) => step.classList.contains("active")) + 1,
             highlightedChanges: dom.squares.filter((square) => square.classList.contains("recent-change")).map((square) => Number(square.dataset.index)),
+            voicePackSize: cheatVoicePlayers.size,
+            activeVoiceCheatId,
+            voiceDucking,
+            activeVoiceTime: activeCheatVoice ? activeCheatVoice.currentTime : 0,
             board: state.board.map((piece) => {
               if (!piece) return null;
               if (piece.type === "donut") return "donut";
@@ -3378,6 +3467,12 @@
             renderBoard();
             performAiMove();
           },
+          playVoiceForTest: (cheatId) => {
+            if (!CHEAT_VOICE_FILES[cheatId]) throw new Error(`Unknown cheat voice: ${cheatId}`);
+            state.soundEnabled = true;
+            return playCheatVoice(cheatId);
+          },
+          stopVoiceForTest: stopCheatVoice,
           triggerCombo: () => {
             resetGame();
             state.phase = "ai";
