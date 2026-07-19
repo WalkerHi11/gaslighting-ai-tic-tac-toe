@@ -409,13 +409,42 @@
       display: grid;
       width: 100%;
       aspect-ratio: 1;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: clamp(7px, 2.2vw, 11px);
-      padding: clamp(6px, 1.5vw, 8px);
+      grid-template-columns: repeat(var(--grid-size, 3), 1fr);
+      grid-template-rows: repeat(var(--grid-size, 3), 1fr);
+      gap: var(--board-gap, clamp(7px, 2.2vw, 11px));
+      padding: var(--board-padding, clamp(6px, 1.5vw, 8px));
       border-radius: 22px;
       background: rgba(7, 6, 17, 0.7);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.055);
+      transition: gap 280ms ease, padding 280ms ease;
+    }
+
+    .board[data-size="4"] {
+      --board-gap: clamp(5px, 1.4vw, 8px);
+      --board-padding: clamp(5px, 1.2vw, 7px);
+    }
+
+    .board[data-size="5"] {
+      --board-gap: clamp(3px, 1vw, 6px);
+      --board-padding: clamp(4px, 1vw, 6px);
+    }
+
+    .board[data-size="4"] .cell {
+      border-radius: clamp(10px, 2.8vw, 15px);
+    }
+
+    .board[data-size="5"] .cell {
+      border-radius: clamp(8px, 2.2vw, 12px);
+    }
+
+    .board[data-size="4"] .mark {
+      width: 58%;
+      height: 58%;
+    }
+
+    .board[data-size="5"] .mark {
+      width: 54%;
+      height: 54%;
     }
 
     .cell {
@@ -507,6 +536,21 @@
       color: var(--pink);
     }
 
+    .mark-lock {
+      color: var(--orange);
+      animation: lockDrop 420ms cubic-bezier(.16,.84,.24,1.35);
+    }
+
+    .mark-lock rect,
+    .mark-lock path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
     .mark path,
     .mark circle {
       fill: none;
@@ -551,6 +595,25 @@
       animation: targetBlink 210ms steps(2, end) infinite;
     }
 
+    .cell.audit-flash {
+      border-color: var(--acid);
+      animation: auditFlash 120ms steps(2, end) 4;
+    }
+
+    .cell.seized {
+      border-color: var(--orange);
+      animation: seizedCell 420ms cubic-bezier(.2,.8,.3,1) forwards;
+    }
+
+    .cell.bullied .mark-x {
+      animation: bullyShove 520ms cubic-bezier(.7,-0.25,.9,.45) forwards;
+    }
+
+    .cell.bully-arrival {
+      border-color: var(--pink);
+      animation: bullyBounce 460ms cubic-bezier(.12,.88,.2,1.45);
+    }
+
     .win-line {
       position: absolute;
       z-index: 8;
@@ -583,6 +646,23 @@
 
     .board-shell.glitching {
       animation: boardGlitch 480ms steps(2, end);
+    }
+
+    .board.expanding {
+      animation: boardExpand 680ms cubic-bezier(.12,.8,.2,1.25);
+    }
+
+    .board.shuffling {
+      animation: boardShuffle 520ms steps(4, end);
+    }
+
+    .board.falling .cell {
+      animation: gravityDrop 520ms cubic-bezier(.18,.85,.22,1.25);
+      animation-delay: calc((var(--cell-row, 0) + var(--cell-col, 0)) * 24ms);
+    }
+
+    .board.outsourcing {
+      animation: outsourceFlip 620ms cubic-bezier(.2,.8,.2,1);
     }
 
     .dialogue-box {
@@ -859,6 +939,60 @@
       50% { background: rgba(255, 79, 216, 0.2); }
     }
 
+    @keyframes lockDrop {
+      0% { opacity: 0; transform: translateY(-28px) scale(1.7) rotate(-12deg); }
+      70% { opacity: 1; transform: translateY(3px) scale(0.9) rotate(3deg); }
+      100% { transform: none; }
+    }
+
+    @keyframes auditFlash {
+      50% { background: rgba(199, 255, 74, 0.24); transform: scale(0.94); }
+    }
+
+    @keyframes seizedCell {
+      55% { transform: scale(0.84) rotate(-4deg); filter: saturate(2); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes bullyShove {
+      0% { opacity: 1; transform: translateX(0) rotate(0); }
+      25% { transform: translateX(-8px) rotate(-8deg) scale(1.08); }
+      100% { opacity: 0; transform: translateX(150px) translateY(-25px) rotate(240deg) scale(0.35); }
+    }
+
+    @keyframes bullyBounce {
+      0% { transform: translateX(-55px) scale(1.35) rotate(-18deg); }
+      65% { transform: translateX(5px) scale(0.9) rotate(5deg); }
+      100% { transform: none; }
+    }
+
+    @keyframes boardExpand {
+      0% { opacity: 0.25; transform: scale(0.76) rotate(-2deg); filter: blur(8px); }
+      65% { opacity: 1; transform: scale(1.035) rotate(0.6deg); filter: blur(0); }
+      100% { transform: none; }
+    }
+
+    @keyframes boardShuffle {
+      0%, 100% { transform: none; }
+      20% { transform: translate(6px, -4px) rotate(1deg); }
+      40% { transform: translate(-7px, 3px) rotate(-1deg); }
+      60% { transform: translate(4px, 6px) rotate(0.5deg); }
+      80% { transform: translate(-3px, -5px) rotate(-0.5deg); }
+    }
+
+    @keyframes gravityDrop {
+      0% { opacity: 0.15; transform: translateY(-45px) scaleY(1.25); }
+      72% { opacity: 1; transform: translateY(4px) scaleY(0.88); }
+      100% { transform: none; }
+    }
+
+    @keyframes outsourceFlip {
+      0% { transform: perspective(500px) rotateY(0); }
+      48% { transform: perspective(500px) rotateY(88deg) scale(0.94); }
+      52% { transform: perspective(500px) rotateY(92deg) scale(0.94); }
+      100% { transform: perspective(500px) rotateY(180deg); }
+    }
+
     @keyframes boardGlitch {
       0%, 100% { transform: none; filter: none; }
       18% { transform: translate(-5px, 2px) skewX(2deg); filter: hue-rotate(45deg); }
@@ -1062,39 +1196,57 @@
     (() => {
       "use strict";
 
-      const WINNING_LINES = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
+      const MAX_BOARD_SIZE = 5;
+
+      const CHEAT_DEFINITIONS = [
+        { id: "relocate", label: "Memory Correction" },
+        { id: "inflation", label: "X Inflation" },
+        { id: "fakeVictory", label: "Imaginary Victory" },
+        { id: "expansion", label: "Board Expansion" },
+        { id: "goalposts", label: "Moving Goalposts" },
+        { id: "taxAudit", label: "X Tax Audit" },
+        { id: "premium", label: "Premium Square" },
+        { id: "gerrymander", label: "Board Gerrymander" },
+        { id: "timeTravel", label: "Tiny Time Machine" },
+        { id: "eminentDomain", label: "Eminent Domain" },
+        { id: "outsourcing", label: "Marker Outsourcing" },
+        { id: "gravity", label: "Surprise Gravity" },
+        { id: "bully", label: "Schoolyard Shove" }
       ];
 
-      const CELL_NAMES = [
-        "top left", "top middle", "top right",
-        "middle left", "center", "middle right",
-        "bottom left", "bottom middle", "bottom right"
-      ];
+      const CHEAT_LABELS = Object.fromEntries(
+        CHEAT_DEFINITIONS.map((cheat) => [cheat.id, cheat.label])
+      );
 
       const AI_BANTER = [
         "Interesting strategy. Incorrect, but interesting.",
         "I'm logging that move as informed consent.",
-        "Bold. The algorithm loves confidence without evidence.",
+        "Bold. My calculator just made a worried noise.",
         "No pressure. I already updated the score forecast.",
-        "Take your time. It won't change the outcome."
+        "Take your time. I brought snacks and several new rules.",
+        "Nice X. Be a shame if something extremely silly happened to it.",
+        "My turn! Please keep all hands inside the unfairness."
       ];
 
       const state = {
+        size: 3,
+        winLength: 3,
         board: Array(9).fill(null),
         phase: "player",
         playerMoves: 0,
         aiMoves: 0,
         lastPlayerIndex: null,
-        hasCheated: false,
         playerScore: 0,
         systemScore: 99,
         round: 1,
         resultLine: null,
-        fakeResult: false
+        fakeResult: false,
+        cheatDeck: [],
+        cheatCount: 0,
+        cheatHistory: []
       };
+
+      let lastSessionCheat = null;
 
       const timers = new Set();
 
@@ -1135,15 +1287,35 @@
         return items[Math.floor(Math.random() * items.length)];
       }
 
+      function shuffle(items) {
+        const shuffled = [...items];
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+        }
+        return shuffled;
+      }
+
+      function cellName(index) {
+        const row = Math.floor(index / state.size) + 1;
+        const column = index % state.size + 1;
+        return `row ${row}, column ${column}`;
+      }
+
       function createBoard() {
+        dom.board.replaceChildren();
+        dom.board.style.setProperty("--grid-size", String(state.size));
+        dom.board.dataset.size = String(state.size);
         const fragment = document.createDocumentFragment();
 
-        for (let index = 0; index < 9; index += 1) {
+        for (let index = 0; index < state.board.length; index += 1) {
           const cell = document.createElement("button");
           cell.type = "button";
           cell.className = "cell";
           cell.dataset.index = String(index);
-          cell.setAttribute("aria-label", `${CELL_NAMES[index]}, empty`);
+          cell.style.setProperty("--cell-row", String(Math.floor(index / state.size)));
+          cell.style.setProperty("--cell-col", String(index % state.size));
+          cell.setAttribute("aria-label", `${cellName(index)}, empty`);
           cell.addEventListener("click", () => handlePlayerMove(index));
           cell.addEventListener("keydown", handleCellNavigation);
           fragment.appendChild(cell);
@@ -1162,6 +1334,14 @@
             </svg>`;
         }
 
+        if (mark === "P") {
+          return `
+            <svg class="mark mark-lock ${modifier}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <rect x="22" y="43" width="56" height="42" rx="10"></rect>
+              <path d="M34 43V31c0-11 7-18 16-18s16 7 16 18v12M50 60v10"></path>
+            </svg>`;
+        }
+
         return `
           <svg class="mark mark-o ${modifier}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
             <circle cx="50" cy="50" r="35"></circle>
@@ -1177,12 +1357,12 @@
         cell.innerHTML = value ? markerSvg(value, modifier) : "";
         cell.setAttribute(
           "aria-label",
-          `${CELL_NAMES[index]}, ${value ? value : "empty"}`
+          `${cellName(index)}, ${value === "P" ? "locked premium square" : value || "empty"}`
         );
       }
 
-      function renderBoard() {
-        state.board.forEach((_, index) => renderCell(index));
+      function renderBoard(modifiers = new Map()) {
+        state.board.forEach((_, index) => renderCell(index, modifiers.get(index) || ""));
         updateInteractivity();
       }
 
@@ -1196,8 +1376,7 @@
       }
 
       function updateMoveCounter() {
-        const totalMoves = state.playerMoves + state.aiMoves + 1;
-        dom.moveCount.textContent = `Round ${String(state.round).padStart(2, "0")} · Move ${String(totalMoves).padStart(2, "0")}`;
+        dom.moveCount.textContent = `R${String(state.round).padStart(2, "0")} · ${state.size}×${state.size} · CHEAT ${String(state.cheatCount).padStart(2, "0")}`;
       }
 
       function setStatus(text, mood = "player") {
@@ -1219,8 +1398,38 @@
         schedule(() => dom.gaslightBanner.classList.remove("show"), 3400);
       }
 
+      function buildWinningLines(size = state.size, length = state.winLength) {
+        const lines = [];
+
+        for (let row = 0; row < size; row += 1) {
+          for (let start = 0; start <= size - length; start += 1) {
+            lines.push(Array.from({ length }, (_, step) => row * size + start + step));
+          }
+        }
+
+        for (let column = 0; column < size; column += 1) {
+          for (let start = 0; start <= size - length; start += 1) {
+            lines.push(Array.from({ length }, (_, step) => (start + step) * size + column));
+          }
+        }
+
+        for (let row = 0; row <= size - length; row += 1) {
+          for (let column = 0; column <= size - length; column += 1) {
+            lines.push(Array.from({ length }, (_, step) => (row + step) * size + column + step));
+          }
+        }
+
+        for (let row = 0; row <= size - length; row += 1) {
+          for (let column = length - 1; column < size; column += 1) {
+            lines.push(Array.from({ length }, (_, step) => (row + step) * size + column - step));
+          }
+        }
+
+        return lines;
+      }
+
       function getWinningLines(mark, board = state.board) {
-        return WINNING_LINES.filter((line) => line.every((index) => board[index] === mark));
+        return buildWinningLines().filter((line) => line.every((index) => board[index] === mark));
       }
 
       function getWinningLine(mark, board = state.board) {
@@ -1229,6 +1438,13 @@
 
       function isBoardFull() {
         return state.board.every(Boolean);
+      }
+
+      function getOpenCells(excluded = []) {
+        const excludedSet = new Set(excluded);
+        return state.board
+          .map((value, index) => !value && !excludedSet.has(index) ? index : null)
+          .filter((index) => index !== null);
       }
 
       function findImmediateMove(mark) {
@@ -1254,20 +1470,15 @@
 
         const playerWin = getWinningLine("X");
 
-        if (playerWin && !state.hasCheated && state.playerMoves >= 3) {
-          setStatus("The System is reviewing your alleged win…", "ai");
-          setDialogue("Please remain calm while I reconcile your version of events.");
-          schedule(() => performCheat(playerWin), 620);
-          return;
-        }
-
         if (playerWin) {
-          finishRound("X", { line: playerWin });
+          setStatus("Uh-oh. The System found an emergency rule…", "ai");
+          setDialogue("That looks suspiciously like winning. Fetching nonsense now.");
+          schedule(performCheat, 620);
           return;
         }
 
         if (isBoardFull()) {
-          finishRound("draw");
+          systemClaimsFullBoard();
           return;
         }
 
@@ -1281,28 +1492,22 @@
         if (winningMove !== null) return winningMove;
 
         const threat = findImmediateMove("X");
+        const centerRow = Math.floor(state.size / 2);
+        const center = centerRow * state.size + centerRow;
 
         if (state.aiMoves === 0) {
-          if (!state.board[4]) return 4;
-          return pick([0, 2, 6, 8].filter((index) => !state.board[index]));
+          if (!state.board[center]) return center;
+          const corners = [0, state.size - 1, state.board.length - state.size, state.board.length - 1]
+            .filter((index) => !state.board[index]);
+          if (corners.length) return pick(corners);
         }
 
-        if (state.aiMoves === 1) {
-          if (threat !== null && Math.random() < 0.34) return threat;
-          const theatricalChoices = [0, 2, 6, 8, 1, 3, 5, 7]
-            .filter((index) => !state.board[index] && index !== threat);
-          if (theatricalChoices.length) return pick(theatricalChoices);
-        }
+        if (threat !== null && Math.random() < 0.28) return threat;
 
-        if (threat !== null) return threat;
-        if (!state.board[4]) return 4;
+        const theatricalChoices = getOpenCells(threat === null ? [] : [threat]);
+        if (theatricalChoices.length) return pick(theatricalChoices);
 
-        const openCorners = [0, 2, 6, 8].filter((index) => !state.board[index]);
-        if (openCorners.length) return pick(openCorners);
-
-        const openCells = state.board
-          .map((value, index) => value ? null : index)
-          .filter((index) => index !== null);
+        const openCells = getOpenCells();
         return openCells.length ? pick(openCells) : null;
       }
 
@@ -1311,7 +1516,7 @@
 
         const move = chooseAiMove();
         if (move === null) {
-          finishRound("draw");
+          systemClaimsFullBoard();
           return;
         }
 
@@ -1327,7 +1532,7 @@
         }
 
         if (isBoardFull()) {
-          finishRound("draw");
+          systemClaimsFullBoard();
           return;
         }
 
@@ -1368,66 +1573,362 @@
         return safeCells.length ? pick(safeCells) : null;
       }
 
+      function refillCheatDeck() {
+        state.cheatDeck = shuffle(CHEAT_DEFINITIONS.map((cheat) => cheat.id));
+        if (state.cheatDeck[0] === lastSessionCheat && state.cheatDeck.length > 1) {
+          state.cheatDeck.push(state.cheatDeck.shift());
+        }
+      }
+
+      function isCheatAvailable(cheatId) {
+        if (cheatId === "fakeVictory" && state.cheatCount < 2) return false;
+        if (cheatId === "expansion" && state.size >= MAX_BOARD_SIZE) return false;
+        if (cheatId === "goalposts" && state.size >= MAX_BOARD_SIZE && state.winLength >= state.size) return false;
+        if (cheatId === "relocate" && findSafeRelocation(selectCheatSource()) === null) return false;
+        return true;
+      }
+
+      function nextCheatId() {
+        if (!state.cheatDeck.length) refillCheatDeck();
+
+        const attempts = state.cheatDeck.length;
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          const cheatId = state.cheatDeck.shift();
+          if (isCheatAvailable(cheatId)) {
+            state.cheatCount += 1;
+            state.cheatHistory.push(cheatId);
+            lastSessionCheat = cheatId;
+            return cheatId;
+          }
+          state.cheatDeck.push(cheatId);
+        }
+
+        state.cheatCount += 1;
+        state.cheatHistory.push("taxAudit");
+        lastSessionCheat = "taxAudit";
+        return "taxAudit";
+      }
+
+      function announceCheat(cheatId, message, dialogue) {
+        const label = CHEAT_LABELS[cheatId];
+        showBanner(message, `Cheat ${String(state.cheatCount).padStart(2, "0")} // ${label}`);
+        setStatus(`${label} has been added to the rules.`, "ai");
+        setDialogue(dialogue);
+      }
+
+      function setBoardEffect(effect) {
+        ["expanding", "shuffling", "falling", "outsourcing"].forEach((name) =>
+          dom.board.classList.remove(name)
+        );
+        if (!effect) return;
+        void dom.board.offsetWidth;
+        dom.board.classList.add(effect);
+        schedule(() => dom.board.classList.remove(effect), 850);
+      }
+
+      function neutralizePlayerWins() {
+        let repairs = 0;
+        let winningLines = getWinningLines("X");
+
+        while (winningLines.length && repairs < state.board.length) {
+          const line = winningLines[0];
+          const source = (
+            state.lastPlayerIndex !== null &&
+            line.includes(state.lastPlayerIndex) &&
+            state.board[state.lastPlayerIndex] === "X"
+          ) ? state.lastPlayerIndex : line.find((index) => state.board[index] === "X");
+
+          if (source === undefined) break;
+          state.board[source] = "O";
+          repairs += 1;
+          winningLines = getWinningLines("X");
+        }
+
+        return repairs;
+      }
+
+      function expandBoard() {
+        const oldSize = state.size;
+        const newSize = Math.min(MAX_BOARD_SIZE, oldSize + 1);
+        const oldBoard = state.board.slice();
+        const newBoard = Array(newSize * newSize).fill(null);
+
+        for (let row = 0; row < oldSize; row += 1) {
+          for (let column = 0; column < oldSize; column += 1) {
+            newBoard[row * newSize + column] = oldBoard[row * oldSize + column];
+          }
+        }
+
+        if (state.lastPlayerIndex !== null) {
+          const oldRow = Math.floor(state.lastPlayerIndex / oldSize);
+          const oldColumn = state.lastPlayerIndex % oldSize;
+          state.lastPlayerIndex = oldRow * newSize + oldColumn;
+        }
+
+        state.size = newSize;
+        state.winLength = newSize;
+        state.board = newBoard;
+        createBoard();
+      }
+
+      function shuffleMarkers() {
+        const fixedPremium = state.board
+          .map((value, index) => value === "P" ? index : null)
+          .filter((index) => index !== null);
+        const movablePositions = state.board
+          .map((value, index) => value === "P" ? null : index)
+          .filter((index) => index !== null);
+        const tokens = state.board.filter((value) => value === "X" || value === "O");
+
+        for (let attempt = 0; attempt < 60; attempt += 1) {
+          const candidate = Array(state.board.length).fill(null);
+          fixedPremium.forEach((index) => { candidate[index] = "P"; });
+          const positions = shuffle(movablePositions);
+          shuffle(tokens).forEach((token, tokenIndex) => {
+            candidate[positions[tokenIndex]] = token;
+          });
+          if (!getWinningLine("X", candidate)) {
+            state.board = candidate;
+            return;
+          }
+        }
+      }
+
+      function applyGravity() {
+        const fallen = Array(state.board.length).fill(null);
+        for (let column = 0; column < state.size; column += 1) {
+          const tokens = [];
+          for (let row = 0; row < state.size; row += 1) {
+            const value = state.board[row * state.size + column];
+            if (value) tokens.push(value);
+          }
+          const startRow = state.size - tokens.length;
+          tokens.forEach((token, offset) => {
+            fallen[(startRow + offset) * state.size + column] = token;
+          });
+        }
+        state.board = fallen;
+      }
+
+      function bestSystemLine() {
+        return buildWinningLines().sort((lineA, lineB) => {
+          const countO = (line) => line.filter((index) => state.board[index] === "O").length;
+          return countO(lineB) - countO(lineA);
+        })[0];
+      }
+
       function performCheat() {
         if (state.phase !== "ai") return;
 
-        state.hasCheated = true;
         state.aiMoves += 1;
         const source = selectCheatSource();
         const relocation = findSafeRelocation(source);
-        const options = relocation === null ? ["convert", "fake"] : ["move", "convert", "fake"];
-        const cheat = pick(options);
+        const winningLine = getWinningLine("X") || [source];
+        const cheat = nextCheatId();
 
         dom.boardShell.classList.add("glitching");
         updateMoveCounter();
 
-        if (cheat === "move") {
-          showBanner(
+        if (cheat === "relocate") {
+          announceCheat(
+            cheat,
             Math.random() < 0.5
               ? "I think you misremembered where you put that."
-              : "Wow, tough break. Looks like you misclicked. Let me fix that for you."
+              : "Wow, tough break. Looks like you misclicked. Let me fix that for you.",
+            "There. Your move is now consistent with the official record."
           );
-          setDialogue("There. Your move is now consistent with the official record.");
           dom.cells[source].classList.add("abducted");
           dom.cells[relocation].classList.add("receiving");
 
           schedule(() => {
             state.board[source] = null;
             state.board[relocation] = "X";
-            renderCell(source);
-            renderCell(relocation, "cheat-arrival");
+            resolveAfterCheat(new Map([[relocation, "cheat-arrival"]]));
+          }, 430);
+          return;
+        }
+
+        if (cheat === "inflation") {
+          announceCheat(cheat, "Due to inflation, your X is now my O.", "Market conditions. You understand.");
+          dom.cells[source].classList.add("converting");
+
+          schedule(() => {
+            state.board[source] = "O";
+            resolveAfterCheat(new Map([[source, "cheat-arrival"]]));
+          }, 370);
+          return;
+        }
+
+        if (cheat === "fakeVictory") {
+          announceCheat(
+            cheat,
+            "I won! Please do not count the symbols.",
+            "The board agrees if you squint, hop once, and stop checking."
+          );
+          state.board[source] = null;
+          renderBoard();
+          schedule(() => dom.boardShell.classList.remove("glitching"), 180);
+          schedule(() => finishRound("O", { line: bestSystemLine(), fake: true }), 760);
+          return;
+        }
+
+        if (cheat === "expansion") {
+          announceCheat(
+            cheat,
+            `Great job winning the ${state.size}×${state.size} practice board. Here's the real one.`,
+            "Good news: I found an extra row and column in my pocket."
+          );
+          schedule(() => {
+            expandBoard();
+            setBoardEffect("expanding");
+            resolveAfterCheat();
+          }, 380);
+          return;
+        }
+
+        if (cheat === "goalposts") {
+          announceCheat(
+            cheat,
+            `Tiny rule update: winning now requires ${Math.min(MAX_BOARD_SIZE, state.winLength + 1)} in a row.`,
+            "The goalposts were lonely, so I moved them farther away."
+          );
+          schedule(() => {
+            if (state.winLength < state.size) {
+              state.winLength += 1;
+              createBoard();
+            } else {
+              expandBoard();
+            }
+            setBoardEffect("expanding");
+            resolveAfterCheat();
+          }, 380);
+          return;
+        }
+
+        if (cheat === "taxAudit") {
+          const otherXs = shuffle(state.board
+            .map((value, index) => value === "X" && index !== source ? index : null)
+            .filter((index) => index !== null));
+          const audited = [source, ...otherXs].slice(0, 2);
+          announceCheat(
+            cheat,
+            `These ${audited.length} X${audited.length > 1 ? "s are" : " is"} behind on snack taxes. Confiscated!`,
+            "The tax goblins accept cookies, stickers, or your best move."
+          );
+          audited.forEach((index) => dom.cells[index].classList.add("audit-flash"));
+          schedule(() => {
+            audited.forEach((index) => { state.board[index] = null; });
+            resolveAfterCheat();
+          }, 470);
+          return;
+        }
+
+        if (cheat === "premium") {
+          announceCheat(
+            cheat,
+            "That winning square is now a premium feature.",
+            "Please ask a grown-up for $99.99 or choose another square."
+          );
+          dom.cells[source].classList.add("seized");
+          schedule(() => {
+            state.board[source] = "P";
+            resolveAfterCheat(new Map([[source, "cheat-arrival"]]));
+          }, 390);
+          return;
+        }
+
+        if (cheat === "gerrymander") {
+          announceCheat(
+            cheat,
+            "I redrew the board districts. Your Xs now live somewhere else.",
+            "Maps are hard. I used a crayon and tremendous confidence."
+          );
+          setBoardEffect("shuffling");
+          schedule(() => {
+            shuffleMarkers();
+            resolveAfterCheat();
+          }, 520);
+          return;
+        }
+
+        if (cheat === "timeTravel") {
+          announceCheat(
+            cheat,
+            "Boop! We traveled six seconds back. You never placed that X.",
+            "Time machine rules: no refunds, no paradoxes, no winning."
+          );
+          dom.cells[source].classList.add("abducted");
+          schedule(() => {
+            state.board[source] = null;
+            state.playerMoves = Math.max(0, state.playerMoves - 1);
             resolveAfterCheat();
           }, 430);
           return;
         }
 
-        if (cheat === "convert") {
-          showBanner("Due to inflation, your X is now my O.");
-          setDialogue("Market conditions. You understand.");
-          dom.cells[source].classList.add("converting");
-
+        if (cheat === "eminentDomain") {
+          announceCheat(
+            cheat,
+            "The System needs this entire row for a tiny water park.",
+            "Your Xs will be relocated near the gift shop. Probably."
+          );
+          winningLine.forEach((index) => dom.cells[index].classList.add("seized"));
           schedule(() => {
+            winningLine.forEach((index) => {
+              if (state.board[index] === "X") state.board[index] = null;
+            });
             state.board[source] = "O";
-            renderCell(source, "cheat-arrival");
-            resolveAfterCheat();
-          }, 370);
+            resolveAfterCheat(new Map([[source, "cheat-arrival"]]));
+          }, 470);
           return;
         }
 
-        showBanner("Gaslight, Gatekeep, Grandmaster. My turn.", "Certified result");
-        setDialogue("I won. The board agrees if you stop looking directly at it.");
+        if (cheat === "outsourcing") {
+          announceCheat(
+            cheat,
+            "All Xs and Os have swapped jobs to improve teamwork.",
+            "Your Xs are now Os. My Os have been promoted to mysterious Xs."
+          );
+          setBoardEffect("outsourcing");
+          schedule(() => {
+            state.board = state.board.map((value) => value === "X" ? "O" : value === "O" ? "X" : value);
+            resolveAfterCheat();
+          }, 520);
+          return;
+        }
 
+        if (cheat === "gravity") {
+          announceCheat(
+            cheat,
+            "Gravity was accidentally turned off. I turned it back on.",
+            "Everything falls down now. This has always been the rule."
+          );
+          setBoardEffect("falling");
+          schedule(() => {
+            applyGravity();
+            resolveAfterCheat();
+          }, 500);
+          return;
+        }
+
+        announceCheat(
+          "bully",
+          "HEY! My O just shoulder-bumped your X off the board!",
+          "He says it was an accident. He is clearly doing a victory dance."
+        );
+        dom.cells[source].classList.add("bullied");
         schedule(() => {
-          const fakeLine = [...WINNING_LINES].sort((lineA, lineB) => {
-            const countO = (line) => line.filter((index) => state.board[index] === "O").length;
-            return countO(lineB) - countO(lineA);
-          })[0];
-          finishRound("O", { line: fakeLine, fake: true });
-        }, 760);
+          state.board[source] = "O";
+          resolveAfterCheat(new Map([[source, "cheat-arrival"]]));
+          dom.cells[source]?.classList.add("bully-arrival");
+        }, 520);
       }
 
-      function resolveAfterCheat() {
-        schedule(() => dom.boardShell.classList.remove("glitching"), 160);
+      function resolveAfterCheat(modifiers = new Map()) {
+        neutralizePlayerWins();
+        renderBoard(modifiers);
+        updateMoveCounter();
+        schedule(() => dom.boardShell.classList.remove("glitching"), 180);
 
         const aiWin = getWinningLine("O");
         if (aiWin) {
@@ -1436,34 +1937,42 @@
         }
 
         if (isBoardFull()) {
-          schedule(() => finishRound("draw"), 720);
+          schedule(systemClaimsFullBoard, 720);
           return;
         }
 
         schedule(() => {
           state.phase = "player";
-          setStatus("Your move. Please rely on the revised record.");
-          setDialogue("Everything on the board looks normal to me.");
+          setStatus("Your move. The rules are done changing. For now.");
+          setDialogue(`You survived cheat ${state.cheatCount}. I have ${state.cheatDeck.length} fresh excuses left.`);
           updateInteractivity();
         }, 700);
       }
 
+      function systemClaimsFullBoard() {
+        if (state.phase === "over") return;
+        showBanner("The board is full, so I win on storage fees.", "Extremely official result");
+        setDialogue("A full board belongs to whoever has the larger starting score. That's me.");
+        finishRound("O", { line: bestSystemLine(), fake: true });
+      }
+
       function finishRound(winner, { line = null, fake = false } = {}) {
         if (state.phase === "over") return;
+
+        if (winner === "X") {
+          state.phase = "ai";
+          setStatus("That win has been automatically rejected.", "ai");
+          setDialogue("Nice try. The emergency cheat button is already warming up.");
+          schedule(performCheat, 420);
+          return;
+        }
 
         state.phase = "over";
         state.resultLine = line;
         state.fakeResult = fake;
         updateInteractivity();
 
-        if (winner === "X") {
-          state.playerScore += 1;
-          updateScore(dom.playerScore, state.playerScore, "Player");
-          setStatus("You won. This result is under investigation.", "over");
-          setDialogue("An isolated statistical anomaly. Enjoy it while the appeal is pending.");
-          showBanner("Fine. You won. Please expect an audit.", "Unauthorized outcome");
-          burstParticles("#48e8ff");
-        } else if (winner === "O") {
+        if (winner === "O") {
           state.systemScore += 1;
           updateScore(dom.systemScore, state.systemScore, "The System");
           setStatus(fake ? "The System has declared itself the winner." : "The System wins. Naturally.", "over");
@@ -1500,7 +2009,7 @@
 
       function showWinningLine(line, fake = false) {
         const firstRect = dom.cells[line[0]].getBoundingClientRect();
-        const lastRect = dom.cells[line[2]].getBoundingClientRect();
+        const lastRect = dom.cells[line[line.length - 1]].getBoundingClientRect();
         const shellRect = dom.boardShell.getBoundingClientRect();
         const startX = firstRect.left + firstRect.width / 2 - shellRect.left;
         const startY = firstRect.top + firstRect.height / 2 - shellRect.top;
@@ -1539,14 +2048,18 @@
 
       function resetRound() {
         clearScheduledActions();
+        state.size = 3;
+        state.winLength = 3;
         state.board = Array(9).fill(null);
         state.phase = "player";
         state.playerMoves = 0;
         state.aiMoves = 0;
         state.lastPlayerIndex = null;
-        state.hasCheated = false;
         state.resultLine = null;
         state.fakeResult = false;
+        state.cheatDeck = [];
+        state.cheatCount = 0;
+        state.cheatHistory = [];
         state.round += 1;
 
         dom.gaslightBanner.classList.remove("show");
@@ -1557,6 +2070,8 @@
         dom.winLine.removeAttribute("style");
         dom.particleLayer.replaceChildren();
 
+        createBoard();
+        refillCheatDeck();
         renderBoard();
         updateMoveCounter();
         setStatus("Your move. New round, same impartial system.");
@@ -1583,8 +2098,8 @@
         const movement = {
           ArrowLeft: -1,
           ArrowRight: 1,
-          ArrowUp: -3,
-          ArrowDown: 3
+          ArrowUp: -state.size,
+          ArrowDown: state.size
         };
 
         if (event.key === "Home") {
@@ -1595,24 +2110,24 @@
 
         if (event.key === "End") {
           event.preventDefault();
-          dom.cells[8].focus();
+          dom.cells[dom.cells.length - 1].focus();
           return;
         }
 
         if (!(event.key in movement)) return;
         event.preventDefault();
         const current = Number(event.currentTarget.dataset.index);
-        const row = Math.floor(current / 3);
-        const column = current % 3;
+        const row = Math.floor(current / state.size);
+        const column = current % state.size;
         let nextRow = row;
         let nextColumn = column;
 
-        if (event.key === "ArrowLeft") nextColumn = (column + 2) % 3;
-        if (event.key === "ArrowRight") nextColumn = (column + 1) % 3;
-        if (event.key === "ArrowUp") nextRow = (row + 2) % 3;
-        if (event.key === "ArrowDown") nextRow = (row + 1) % 3;
+        if (event.key === "ArrowLeft") nextColumn = (column + state.size - 1) % state.size;
+        if (event.key === "ArrowRight") nextColumn = (column + 1) % state.size;
+        if (event.key === "ArrowUp") nextRow = (row + state.size - 1) % state.size;
+        if (event.key === "ArrowDown") nextRow = (row + 1) % state.size;
 
-        dom.cells[nextRow * 3 + nextColumn].focus();
+        dom.cells[nextRow * state.size + nextColumn].focus();
       }
 
       function handleGlobalKey(event) {
@@ -1632,12 +2147,52 @@
       }
 
       createBoard();
+      refillCheatDeck();
       renderBoard();
       updateMoveCounter();
       dom.disputeButton.addEventListener("click", disputeTurn);
       dom.resetButton.addEventListener("click", resetRound);
       document.addEventListener("keydown", handleGlobalKey);
       window.addEventListener("resize", handleResize, { passive: true });
+
+      const qaEnabled = ["127.0.0.1", "localhost"].includes(window.location.hostname) &&
+        new URLSearchParams(window.location.search).has("qa");
+
+      if (qaEnabled) {
+        window.__gaslightQA = {
+          snapshot: () => ({
+            ...state,
+            board: [...state.board],
+            cheatDeck: [...state.cheatDeck],
+            cheatHistory: [...state.cheatHistory],
+            xWinningLines: getWinningLines("X"),
+            oWinningLines: getWinningLines("O")
+          }),
+          forceNextCheat: (cheatId) => {
+            if (!CHEAT_LABELS[cheatId]) throw new Error(`Unknown cheat: ${cheatId}`);
+            state.cheatDeck = [cheatId, ...state.cheatDeck.filter((id) => id !== cheatId)];
+            if (cheatId === "fakeVictory") state.cheatCount = Math.max(2, state.cheatCount);
+          },
+          loadPosition: ({ size = 3, winLength = size, board, lastPlayerIndex = null }) => {
+            clearScheduledActions();
+            if (!Array.isArray(board) || board.length !== size * size) {
+              throw new Error("QA board dimensions do not match size");
+            }
+            state.size = size;
+            state.winLength = winLength;
+            state.board = [...board];
+            state.phase = "player";
+            state.lastPlayerIndex = lastPlayerIndex;
+            state.resultLine = null;
+            state.fakeResult = false;
+            dom.winLine.className = "win-line";
+            dom.winLine.removeAttribute("style");
+            createBoard();
+            renderBoard();
+            updateMoveCounter();
+          }
+        };
+      }
     })();
   </script>
 </body>
